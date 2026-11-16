@@ -1,0 +1,16 @@
+{
+  "name": "Pylon Daily",
+  "short_name": "Pylon Daily",
+  "description": "The daily fantasy football guessing game: 7 plays, 100 yards, closer is better.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#060f1c",
+  "theme_color": "#060f1c",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

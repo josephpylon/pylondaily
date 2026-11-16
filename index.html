@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060f1c">
+<title>Pylon Daily — the daily fantasy football guessing game</title>
+<meta name="description" content="Pylon Daily is a free daily fantasy football guessing game. Name the NFL player whose fantasy points per game is closest to the target, gain yards for accuracy, and drive 100 yards in 7 plays.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pylon Daily">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- link previews (texts, Discord, X, iMessage) -->
+<link rel="canonical" href="https://pylondaily.com/">
+<meta property="og:url" content="https://pylondaily.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pylon Daily">
+<meta property="og:title" content="Pylon Daily — the daily fantasy football guessing game">
+<meta property="og:description" content="Name the NFL player closest to the target fantasy points per game. 7 plays, 100 yards, closer is better. A new Daily Drive every morning.">
+<meta property="og:image" content="https://pylondaily.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pylon Daily: 7 plays, 100 yards, closer is better">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pylon Daily — the daily fantasy football guessing game">
+<meta name="twitter:description" content="Name the NFL player closest to the target fantasy points per game. 7 plays, 100 yards, closer is better.">
+<meta name="twitter:image" content="https://pylondaily.com/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Pylon Daily","url":"https://pylondaily.com/","description":"A free daily fantasy football guessing game: name the NFL player closest to a target fantasy points per game and drive 100 yards in 7 plays.","genre":["Sports","Trivia","Puzzle"],"gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script>
+  // dark by default; remember a switch to light on this device
+  try{ var t=localStorage.getItem("hm-theme"); if(t==="light"||t==="christmas") document.documentElement.dataset.theme=t; }catch(e){}
+  try{ if(localStorage.getItem("hm-lights")==="off") document.documentElement.dataset.lights="off"; }catch(e){}
+  try{ var f=localStorage.getItem("hm-field"); if(f==="blue"||f==="red") document.documentElement.dataset.field=f; }catch(e){}
+</script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#0a1f3d; --navy2:#0e2a50; --pats-red:#c60c30;
+    /* dark theme (default) */
+    --bg:#060f1c; --surface:#0d1b2e; --surface2:#081424; --input:#060f1c;
+    --line:#2a3e59; --line2:#3d5878; --track:#1e2f45; --hover:#17304f;
+    --paper:#e4e9ee; --chalk:#f0f4f8; --dim:#8494a6; --faint:#5a6b80;
+    --pooltext:#9aacc0; --poolused:#4a5a6e;
+    --gold:#f5c542; --on-gold:#1a1405; --cool:#5fb3e0; --on-cool:#06202b;
+    --hot:#e8523f; --silver:#b0b7bc; --on-silver:#0a1f3d;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef2f6; --surface:#ffffff; --surface2:#f6f8fb; --input:#ffffff;
+    --line:#c9d3de; --line2:#9fb0c2; --track:#dbe3ec; --hover:#e3ecf6;
+    --paper:#22303f; --chalk:#0c1a2c; --dim:#5d6e80; --faint:#8494a6;
+    --pooltext:#3c4d5f; --poolused:#a9b5c2;
+    --gold:#b97a00; --on-gold:#ffffff; --cool:#1c7fb5; --on-cool:#ffffff;
+    --hot:#cf3a26; --silver:#56677a; --on-silver:#ffffff;
+  }
+  /* Christmas: pine green page, cream text, red and gold accents */
+  :root[data-theme="christmas"]{
+    --bg:#0a2618; --surface:#10341f; --surface2:#0c2b1a; --input:#081f14;
+    --line:#2c6444; --line2:#3d8259; --track:#1a4a30; --hover:#19482f;
+    --paper:#f1eadb; --chalk:#fff8e8; --dim:#a5bfab; --faint:#6c9079;
+    --pooltext:#c2d6c6; --poolused:#527259;
+    --gold:#f2c14e; --on-gold:#3a1b00; --cool:#d8323a; --on-cool:#ffffff;
+    --hot:#ff8273; --silver:#d5e4cf; --on-silver:#0a2618;
+  }
+  /* snow drifts over the page but never blocks a click; menus and dialogs sit above it */
+  #snow{position:fixed;inset:0;pointer-events:none;z-index:45;display:none}
+  .lights{position:absolute;top:0;left:0;right:0;height:16px;display:none;justify-content:space-around;
+    pointer-events:none;z-index:15;overflow:hidden}
+  .lights::before{content:"";position:absolute;left:0;right:0;top:3px;height:2px;background:#26402f}
+  .lights i{position:relative;top:3px;width:7px;height:11px;border-radius:50% 50% 45% 45%;
+    animation:twinkle 1.6s ease-in-out infinite;box-shadow:0 0 8px currentColor}
+  .lights i:nth-child(4n+1){background:#ff3b3b;color:#ff3b3b}
+  .lights i:nth-child(4n+2){background:#2fd16b;color:#2fd16b;animation-delay:.4s}
+  .lights i:nth-child(4n+3){background:#ffd24a;color:#ffd24a;animation-delay:.8s}
+  .lights i:nth-child(4n+4){background:#4fb3ff;color:#4fb3ff;animation-delay:1.2s}
+  @keyframes twinkle{0%,100%{opacity:1}50%{opacity:.35}}
+  :root[data-theme="christmas"]:not([data-lights="off"]) .lights{display:flex}
+  :root[data-theme="christmas"]:not([data-lights="off"]) .topbar,
+  :root[data-theme="christmas"]:not([data-lights="off"]) .leftbar{top:20px}
+  .lightsopt{display:none;align-items:center;gap:8px;margin-top:4px;padding:8px 9px 6px;border-top:1px solid var(--line);
+    font-size:11px;letter-spacing:.1em;color:var(--paper);cursor:pointer;white-space:nowrap}
+  .lightsopt input{width:14px;height:14px;accent-color:var(--gold);margin:0}
+  :root[data-theme="christmas"] .lightsopt{display:flex}
+  .lightsopt.always{display:flex}
+  @media (prefers-reduced-motion: reduce){.lights i{animation:none}}
+  .wrap{position:relative;z-index:1}
+  :root[data-theme="christmas"] h1{text-shadow:2px 2px 0 #c8102e,4px 4px 0 #0f5c33}
+  /* field colours: plain green by default, blue and red turf as alternates */
+  :root{
+    --turf1:#1f6b33; --turf2:#267a3c; --ez1:#17552a; --ez2:#103f1f; --fborder:#2f5a3a;
+  }
+  :root[data-field="blue"]{
+    --turf1:#0b3fa6; --turf2:#0f4bbd; --ez1:#e2580f; --ez2:#c0450a; --fborder:#2a57b5;
+  }
+  :root[data-field="red"]{
+    --turf1:#a01722; --turf2:#b31d29; --ez1:#1d1d21; --ez2:#060607; --fborder:#7a1019;
+  }
+  body{transition:background .25s,color .25s}
+  .topbar{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:20}
+  .topbar>button,.fieldpick>button{padding:7px 11px;font-size:11px;letter-spacing:.12em}
+  .fieldpick{position:relative}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:6px;
+      border:1px solid rgba(255,255,255,.6);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+  .fmenu{
+    display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:128px;
+    background:var(--surface);border:2px solid var(--line2);padding:4px;
+    box-shadow:0 8px 22px rgba(0,0,0,.45);
+  }
+  .fmenu.open{display:block}
+  .fmenu button{
+    display:flex;align-items:center;width:100%;background:transparent;color:var(--paper);
+    padding:8px 9px;font-size:11px;letter-spacing:.12em;text-align:left;
+  }
+  .fmenu button:hover,.fmenu button.on{background:var(--hover)}
+  @media(max-width:600px){header{padding-top:50px}}
+  body{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));
+       padding-bottom:max(48px,env(safe-area-inset-bottom))}
+  .modetag{display:none}
+  .ac div span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  body{
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    background:var(--bg);color:var(--paper);
+    min-height:100vh;display:flex;justify-content:center;
+    padding:20px 14px 48px;
+  }
+  .wrap{width:100%;max-width:680px}
+
+  header{text-align:center;margin-bottom:18px}
+  h1{
+    font-size:clamp(28px,7vw,44px);letter-spacing:.14em;
+    color:var(--chalk);text-shadow:2px 2px 0 var(--pats-red),4px 4px 0 var(--bg);
+  }
+  .tag{font-size:11px;letter-spacing:.22em;color:var(--dim);margin-top:6px}
+
+  /* ---------- tutorial ---------- */
+  .card.tut{max-width:460px}
+  /* like Wordle's How to Play: centred, pops in, closes with the ✕ or a tap outside */
+  #tut{align-items:flex-start}
+  #tut .card{margin:auto 0}   /* centred when it fits, scrolls from the top when it doesn't */
+  .modal.open .card{animation:cardpop .22s ease-out}
+  @keyframes cardpop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.modal.open .card{animation:none}}
+  .tstep{font-size:9px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px}
+  .tbody p{font-size:13px;color:var(--paper);line-height:1.7;margin-bottom:12px}
+  .tbody p b{color:var(--chalk)}
+  .tbody .tsmall{font-size:11px;color:var(--dim)}
+  .tfield{position:relative;height:46px;margin:6px 0 4px;border:2px solid var(--fborder);
+    background:repeating-linear-gradient(90deg,var(--turf1) 0 10%,var(--turf2) 10% 20%);overflow:hidden}
+  .tball{position:absolute;top:50%;left:4%;transform:translate(-50%,-50%);font-style:normal;font-size:18px;
+    animation:tdrive 3.2s cubic-bezier(.4,0,.2,1) infinite}
+  .tez{position:absolute;right:0;top:0;bottom:0;width:13%;background:linear-gradient(180deg,var(--ez1),var(--ez2));
+    color:#fff;font-size:7px;letter-spacing:.12em;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl}
+  @keyframes tdrive{0%{left:4%}18%{left:20%}36%{left:36%}54%{left:55%}72%{left:74%}86%,100%{left:92%}}
+  .tcard{background:var(--surface2);border:1px solid var(--line);padding:12px;font-size:14px;line-height:1.6;color:var(--chalk);margin-bottom:12px}
+  .tcard small{display:block;font-size:9px;letter-spacing:.2em;color:var(--dim);margin-bottom:4px}
+  .tcard b{color:var(--gold)}
+  .tinput{display:block;border:2px solid var(--gold);padding:7px 9px;font-size:13px}
+  .tcaret{display:inline-block;width:1px;height:13px;background:var(--chalk);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .tdrop{display:flex;justify-content:space-between;background:var(--hover);padding:7px 9px;font-size:13px;border:2px solid var(--gold);border-top:none}
+  .tdrop small{color:var(--dim);font-size:10px}
+  .ttable{font-size:12px;border-top:1px solid var(--line);margin-bottom:6px}
+  .ttable div{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid var(--line);color:var(--paper)}
+  .ttable b{color:var(--gold)}
+  .tkeys{border-top:1px solid var(--line);margin-bottom:6px}
+  .tkeys div{display:flex;align-items:center;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line);
+    font-size:12px;line-height:1.5;color:var(--paper)}
+  .tkeys .key{flex:none;min-width:38px;text-align:center;border:2px solid var(--line2);padding:3px 6px;
+    font-size:11px;font-weight:700;color:var(--chalk);white-space:nowrap}
+  .tkeys .key .sw{margin-right:0}
+  .tkeys b{color:var(--chalk)}
+  .tdots{display:flex;gap:6px;justify-content:center;margin-top:6px}
+  .tdots i{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+  .tdots i.on{background:var(--gold)}
+  .card button:disabled,.res button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  #helpBtn{font-weight:700;min-width:34px}
+  .savehint a{color:var(--dim)}
+  @media (prefers-reduced-motion: reduce){.tball{animation:none;left:55%}.tcaret{animation:none}}
+
+  /* ---------- daily drive + share ---------- */
+  .emoji{font-size:26px;letter-spacing:.12em;margin-top:14px;line-height:1.2}
+  .legend{font-size:10px;color:var(--dim);margin-top:8px;letter-spacing:.04em}
+  .sharebox{
+    width:100%;max-width:340px;height:92px;background:var(--input);color:var(--paper);border:2px solid var(--line2);
+    font:inherit;font-size:12px;padding:8px;margin-top:10px;resize:none;
+  }
+  .dailytag{font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px}
+
+  /* ---------- suggestions ---------- */
+  #suggest{margin-top:14px}
+  .sgwrap{padding:4px 14px 16px}
+  .sgwrap p{font-size:12px;color:var(--dim);line-height:1.7;margin-bottom:12px}
+  .sggrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sgwrap label{display:block;font-size:9px;letter-spacing:.18em;color:var(--dim);margin:10px 0 5px}
+  .sgwrap input[type=text],.sgwrap input[type=email],.sgwrap select,.sgwrap textarea{
+    width:100%;background:var(--input);color:var(--chalk);border:2px solid var(--line2);
+    font:inherit;font-size:13px;padding:9px 10px;
+  }
+  .sgwrap textarea{height:120px;resize:vertical;line-height:1.5}
+  .sgwrap input:focus,.sgwrap select:focus,.sgwrap textarea:focus{outline:none;border-color:var(--gold)}
+  .sgfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .sgfoot small{font-size:10px;color:var(--faint)}
+  .sgwrap button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  .sgstatus{font-size:12px;color:var(--dim);margin-top:10px;min-height:16px}
+  .sgstatus.good{color:#5fc77a} .sgstatus.bad{color:var(--hot)}
+  .sgoff{font-size:11px;color:var(--gold);margin-top:8px}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  footer a{color:var(--dim)}
+  @media(max-width:520px){.sggrid{grid-template-columns:1fr}}
+
+  /* ---------- profile button + panel ---------- */
+  .leftbar{position:absolute;top:14px;left:14px;z-index:20;display:flex;gap:8px}
+  .acctbtn{
+    padding:7px 11px;font-size:11px;letter-spacing:.12em;
+    max-width:26vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .homebtn{padding:7px 11px;font-size:13px;line-height:1}
+  .homebtn[hidden]{display:none}
+  h1 a{color:inherit;text-decoration:none}
+  .modal{
+    position:fixed;inset:0;z-index:60;display:none;background:rgba(0,0,0,.62);
+    align-items:flex-start;justify-content:center;padding:44px 14px;overflow-y:auto;
+  }
+  .modal.open{display:flex}
+  .card{width:100%;max-width:520px;background:var(--surface);border:2px solid var(--line2);padding:20px;position:relative}
+  .card h2{font-size:15px;letter-spacing:.2em;color:var(--chalk);margin-bottom:12px;padding-right:40px}
+  .card h3{font-size:10px;letter-spacing:.2em;color:var(--gold);margin:20px 0 8px}
+  .card p{font-size:12px;color:var(--dim);line-height:1.7}
+  .card p b{color:var(--chalk)}
+  .card .x{position:absolute;top:12px;right:12px;padding:4px 9px;font-size:12px}
+  .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .small{padding:6px 10px;font-size:11px;letter-spacing:.1em}
+  .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .stat{background:var(--surface2);border:1px solid var(--line);padding:9px 6px;text-align:center}
+  .stat .k{font-size:8px;letter-spacing:.14em;color:var(--dim)}
+  .stat .v{font-size:18px;font-weight:700;color:var(--chalk);margin-top:3px}
+  .rank{font-size:12px;color:var(--paper)}
+  .rank div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .rank div span:last-child{color:var(--gold);font-weight:700;white-space:nowrap}
+  .toggle{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--paper);line-height:1.65}
+  .toggle input{margin-top:3px;width:16px;height:16px;flex:none;accent-color:var(--gold)}
+  .card textarea{
+    width:100%;height:130px;background:var(--input);color:var(--paper);border:2px solid var(--line2);
+    font:inherit;font-size:11px;padding:8px;margin-top:10px;resize:vertical;
+  }
+  .savehint{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.6}
+
+  /* ---------- settings bar ---------- */
+  .settings{
+    display:flex;align-items:stretch;gap:6px;margin-bottom:14px;flex-wrap:wrap;
+    background:var(--surface);border:2px solid var(--line);padding:6px;
+  }
+  .settings .k{
+    font-size:9px;letter-spacing:.2em;color:var(--dim);
+    display:flex;align-items:center;padding:0 8px 0 6px;
+  }
+  .settings button{
+    flex:1;min-width:120px;background:transparent;color:var(--dim);
+    border:2px solid transparent;padding:7px 8px;font-size:12px;letter-spacing:.12em;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .settings button small{font-size:9px;letter-spacing:.08em;font-weight:400;opacity:.85}
+  .settings button:hover{background:var(--hover);filter:none}
+  .settings button.on{background:var(--gold);color:var(--on-gold)}
+
+  /* ---------- scoreboard ---------- */
+  .board{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;
+  }
+  .cell{
+    background:var(--surface);border:2px solid var(--line);padding:8px 6px;text-align:center;
+  }
+  .cell .k{font-size:9px;letter-spacing:.18em;color:var(--dim)}
+  .cell .v{font-size:22px;font-weight:700;color:var(--chalk);margin-top:2px}
+  .cell .v.hot{color:var(--gold)}
+
+  /* ---------- field ---------- */
+  .field{
+    position:relative;height:74px;margin-bottom:16px;
+    background:repeating-linear-gradient(90deg,var(--turf1) 0 10%,var(--turf2) 10% 20%);
+    border:2px solid var(--fborder);overflow:hidden;
+  }
+  .ez{
+    position:absolute;top:0;right:0;height:100%;width:12%;
+    background:linear-gradient(180deg,var(--ez1),var(--ez2));
+    border-left:2px solid rgba(255,255,255,.85);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ez span{
+    font-size:9px;letter-spacing:.16em;color:rgba(255,255,255,.9);
+    writing-mode:vertical-rl;text-orientation:mixed;
+  }
+  .yard{position:absolute;top:0;height:100%;width:1px;background:rgba(255,255,255,.32)}
+  .yard.five{background:rgba(255,255,255,.55);width:2px}
+  .ynum{
+    position:absolute;bottom:3px;transform:translateX(-50%);
+    font-size:9px;color:rgba(255,255,255,.55);font-weight:700
+  }
+  /* hash marks down the middle */
+  .hashrow{
+    position:absolute;left:0;right:12%;height:1px;
+    background:repeating-linear-gradient(90deg,rgba(255,255,255,.4) 0 6px,transparent 6px 20px);
+  }
+  .hashrow.top{top:22%} .hashrow.bot{bottom:22%}
+  .ball{
+    position:absolute;top:50%;transform:translate(-50%,-50%);
+    font-size:20px;transition:left .7s cubic-bezier(.22,1,.36,1);
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));z-index:2;
+  }
+  .gain{
+    position:absolute;top:6px;transform:translateX(-50%);
+    font-size:12px;font-weight:700;color:#f5c542;
+    text-shadow:1px 1px 0 #000;opacity:0;transition:opacity .3s;z-index:3;
+  }
+  .gain.show{opacity:1}
+
+  /* ---------- panel ---------- */
+  .panel{background:var(--surface);border:2px solid var(--line);padding:18px;position:relative}
+
+  /* ---------- name dropdown ---------- */
+  .acwrap{flex:1;min-width:0;position:relative}
+  .acwrap input{width:100%}
+  .ac{
+    position:absolute;top:100%;left:0;right:0;z-index:6;display:none;
+    background:var(--surface2);border:2px solid var(--gold);border-top:none;
+    max-height:236px;overflow-y:auto;
+  }
+  .ac.open{display:block}
+  .ac div{
+    padding:9px 12px;font-size:14px;cursor:pointer;color:var(--chalk);
+    display:flex;justify-content:space-between;gap:10px;
+  }
+  .ac div small{color:var(--dim);font-size:11px;letter-spacing:.08em;white-space:nowrap}
+  .ac div.on,.ac div:hover{background:var(--hover)}
+
+  /* ---------- pause ---------- */
+  .pausebtn{padding:5px 10px;font-size:11px;letter-spacing:.12em}
+  .pauseov{
+    position:absolute;inset:0;z-index:8;background:var(--surface);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+    text-align:center;padding:18px;
+  }
+  .pauseov .big{font-size:clamp(22px,6vw,30px);letter-spacing:.2em;font-weight:700;color:var(--silver)}
+  .pauseov .sub{font-size:12px;color:var(--dim)}
+
+  /* ---------- start screen styles ---------- */
+  .rules{font-size:13px;color:var(--dim);line-height:1.9;margin:14px auto 4px;max-width:440px;text-align:left}
+  .rules b{color:var(--chalk)}
+  .plabel{font-size:10px;letter-spacing:.2em;color:var(--dim);margin-bottom:10px}
+  .prompt{font-size:clamp(16px,3.6vw,20px);line-height:1.5}
+  .prompt b{color:var(--gold);font-size:1.15em}
+  .pos-pill{
+    display:inline-block;background:var(--cool);color:var(--on-cool);
+    padding:1px 8px;font-size:12px;font-weight:700;letter-spacing:.08em;
+  }
+  .pos-pill.flex{background:var(--silver);color:var(--on-silver)}
+  .pos-pill.sflex{background:var(--gold);color:var(--on-gold)}
+  .hint{font-size:11px;color:var(--dim);margin-top:7px;letter-spacing:.06em}
+
+  .entry{display:flex;gap:8px;margin-top:16px}
+  input[type=text]{
+    flex:1;min-width:0;background:var(--input);border:2px solid var(--line2);
+    color:var(--chalk);padding:11px 12px;font:inherit;font-size:16px;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--gold)}
+  button{
+    background:var(--gold);color:var(--on-gold);border:none;padding:11px 18px;
+    font:inherit;font-weight:700;font-size:14px;letter-spacing:.1em;cursor:pointer;
+  }
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;color:var(--dim);border:2px solid var(--line)}
+
+  .note{font-size:12px;color:var(--hot);margin-top:10px;min-height:16px}
+
+  .clock{
+    font-size:12px;letter-spacing:.14em;color:var(--dim);
+    margin-top:12px;display:flex;align-items:center;gap:8px;
+  }
+  .bar{flex:1;height:5px;background:var(--track)}
+  .bar i{display:block;height:100%;background:var(--cool);transition:width 1s linear}
+  .bar i.low{background:var(--hot)}
+
+  /* ---------- result ---------- */
+  .res{text-align:center;padding:4px 0}
+  .tier{font-size:clamp(22px,6vw,32px);letter-spacing:.1em;font-weight:700}
+  .res .who{font-size:16px;margin-top:10px;color:var(--chalk)}
+  .res .num{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.7}
+  .res .fixed{font-size:11px;color:var(--cool);margin-top:5px;font-style:italic}
+  .res .extra{font-size:11px;color:var(--silver);margin-top:4px;letter-spacing:.06em}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:99;display:none}
+
+  /* ---------- perfect hit ---------- */
+  .res{position:relative;overflow:hidden}
+  .res>*:not(.rays):not(.halo){position:relative;z-index:1}
+  .rays{
+    position:absolute;z-index:0;top:50%;left:50%;width:520px;height:520px;
+    margin:-260px 0 0 -260px;pointer-events:none;
+    background:repeating-conic-gradient(from 0deg,
+      rgba(245,197,66,.17) 0deg 7deg, transparent 7deg 21deg);
+    animation:spin 11s linear infinite, breathe 1.7s ease-in-out infinite;
+  }
+  .halo{
+    position:absolute;z-index:0;top:50%;left:50%;width:220px;height:220px;
+    margin:-110px 0 0 -110px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(245,197,66,.45) 0%,transparent 68%);
+    animation:shock .9s cubic-bezier(.15,.9,.3,1) both;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes breathe{0%,100%{opacity:.4}50%{opacity:.95}}
+  @keyframes shock{0%{transform:scale(.2);opacity:0}35%{opacity:1}100%{transform:scale(2.6);opacity:0}}
+  @keyframes stamp{
+    0%{transform:scale(2.8);opacity:0;letter-spacing:.5em;filter:blur(6px)}
+    55%{transform:scale(.92);opacity:1;letter-spacing:.08em;filter:blur(0)}
+    75%{transform:scale(1.06)}
+    100%{transform:scale(1);letter-spacing:.1em}
+  }
+  @keyframes shimmer{0%,100%{text-shadow:0 0 14px rgba(245,197,66,.55)}50%{text-shadow:0 0 30px rgba(245,197,66,1)}}
+  .res.perfect .tier{
+    animation:stamp .62s cubic-bezier(.2,1.4,.35,1) both, shimmer 1.5s 0.6s ease-in-out infinite;
+  }
+  .res.perfect .who{animation:rise .5s .35s both}
+  .res.perfect .yds{animation:rise .5s .5s both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .res .yds{font-size:19px;color:var(--gold);margin-top:12px;font-weight:700}
+
+  /* ---------- pool ---------- */
+  details{margin-top:14px;border:2px solid var(--line);background:var(--surface2)}
+  summary{padding:9px 12px;cursor:pointer;font-size:11px;letter-spacing:.14em;color:var(--dim)}
+  .pool{padding:0 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:3px}
+  .pool div{font-size:11px;color:var(--pooltext);display:flex;justify-content:space-between;gap:6px}
+  .pool div small b{color:var(--gold);font-weight:700;margin-left:6px}
+  .pool div small{color:var(--faint);font-size:10px;letter-spacing:.06em}
+  .pool div.used{color:var(--poolused);text-decoration:line-through}
+  .pool h4{grid-column:1/-1;font-size:10px;letter-spacing:.18em;color:var(--gold);margin-top:8px}
+
+  .log{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.9}
+  .log span{color:var(--chalk)}
+  footer{margin-top:20px;font-size:10px;color:var(--faint);line-height:1.7;text-align:center}
+
+  /* ---------- closest answers: one quiet line ---------- */
+  .reveal{margin:12px auto 0;max-width:420px;font-size:11px;color:var(--faint);line-height:1.7}
+  .reveal b{color:var(--dim);font-weight:400}
+  .reveal b.me{color:var(--gold)}
+
+  /* ---------- stats and streaks ---------- */
+  .statgrid.four{grid-template-columns:repeat(4,1fr)}
+  .dist .b{display:flex;align-items:center;gap:8px;font-size:10px;margin:4px 0;color:var(--dim)}
+  .dist .b>span{width:58px;flex:none;text-align:right;letter-spacing:.06em}
+  .dist .b i{display:block;height:16px;background:var(--line);min-width:20px;color:var(--paper);font-style:normal;
+    font-size:10px;font-weight:700;text-align:right;padding:1px 6px}
+  .dist .b.today i{background:var(--gold);color:var(--on-gold)}
+  .subline{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.6}
+  .subline b{color:var(--gold)}
+  .pct-today:not(:empty)::before{content:" · "}
+  .pct-today.solo::before{content:none}
+  .links{display:flex;gap:6px 14px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .linkbtn{background:none;border:none;padding:2px 0;color:var(--dim);font-weight:400;font-size:11px;letter-spacing:.08em;
+    text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
+  .linkbtn:hover{filter:none;color:var(--chalk)}
+  /* beginner-friendly: no settings until today's Daily is done, and none during any Daily drive */
+  body.simple .settings,body.simple .filterrow{display:none}
+  /* rookies filter: one quiet checkbox under the bars */
+  .filterrow{display:flex;justify-content:flex-end;margin:-6px 2px 12px}
+  .filterrow label{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.14em;color:var(--dim);cursor:pointer}
+  .filterrow input{width:14px;height:14px;accent-color:var(--gold);margin:0}
+  .filterrow small{color:var(--faint);letter-spacing:.06em}
+
+  /* ---------- pass and play ---------- */
+  .pnpbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .pnpbar[hidden]{display:none}
+  .pnpbar div{background:var(--surface);border:2px solid var(--line);padding:6px 9px;font-size:11px;color:var(--dim);
+    display:flex;justify-content:space-between;gap:8px;letter-spacing:.06em}
+  .pnpbar div span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pnpbar div.on{border-color:var(--gold);color:var(--chalk)}
+  .pnpbar b{color:var(--chalk);white-space:nowrap}
+  .pnpnames{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .pnpnames label{display:flex;flex-direction:column;gap:4px;font-size:9px;letter-spacing:.18em;color:var(--dim);text-align:left}
+  .pnpnames input{background:var(--input);color:var(--chalk);border:2px solid var(--line2);font:inherit;font-size:16px;
+    padding:8px 10px;width:170px;max-width:42vw}
+  .pnpnames input:focus{outline:none;border-color:var(--gold)}
+  .handoff .big{font-size:clamp(22px,6vw,30px);letter-spacing:.12em;color:var(--gold);font-weight:700;margin-top:6px}
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+  .vs div{background:var(--surface2);border:2px solid var(--line);padding:10px}
+  .vs div.win{border-color:var(--gold)}
+  .vs .n{font-size:12px;letter-spacing:.12em;color:var(--chalk);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vs .y{font-size:20px;font-weight:700;color:var(--gold);margin-top:4px}
+  .vs small{display:block;font-size:10px;color:var(--dim);margin-top:2px}
+
+  /* ---------- phones ---------- */
+  @media (max-width:600px){
+    body{padding-top:12px}
+    header{margin-bottom:12px}
+    .tag{font-size:10px;letter-spacing:.16em}
+    /* settings: label on its own line, three equal buttons, no fine print */
+    .settings{padding:5px;gap:4px;margin-bottom:10px}
+    .settings .k{width:100%;padding:2px 4px 0}
+    .settings button{min-width:0;flex:1 1 0;padding:9px 2px;font-size:11px;letter-spacing:.06em}
+    .settings button small{display:none}
+    /* during a drive the bars are locked anyway, so give the room to the play */
+    body.indrive .settings,body.indrive .filterrow{display:none}
+    .modetag{display:inline}
+    .filterrow{margin:-4px 2px 10px}
+    .board{gap:6px;margin-bottom:10px}
+    .cell{padding:6px 4px}
+    .cell .v{font-size:19px}
+    .field{height:60px;margin-bottom:12px}
+    .ball{font-size:17px}
+    .ynum{font-size:8px}
+    .panel{padding:14px}
+    .prompt{font-size:17px}
+    .entry{margin-top:12px}
+    .clock{flex-wrap:wrap}
+    .tier{font-size:clamp(20px,7vw,28px)}
+    .res .who{font-size:15px}
+    .emoji{font-size:clamp(19px,6.4vw,26px);letter-spacing:.06em}
+    .legend{font-size:9.5px;line-height:1.7}
+    .rules{font-size:12.5px;line-height:1.8}
+    .card{padding:16px}
+    .modal{padding:24px 10px}
+    .statgrid{grid-template-columns:repeat(3,1fr)}
+    .stat .v{font-size:16px}
+    footer{font-size:9.5px}
+  }
+  /* very narrow phones: top buttons become icons only */
+  @media (max-width:430px){
+    .acctbtn,.homebtn,.topbar>button,.fieldpick>button{padding:7px 10px;min-width:40px}
+    .leftbar{gap:6px}
+    /* dropdown: full name on top, position and team underneath */
+    .ac div{flex-direction:column;align-items:flex-start;gap:1px}
+    .ac div span{white-space:normal}
+    .topbar{gap:6px}
+  }
+  /* short screens (phones held sideways): same room-making during a drive */
+  @media (max-height:500px){ body.indrive .settings{display:none} }
+  /* touch screens: comfortable tap targets */
+  @media (pointer:coarse){
+    .acctbtn,.homebtn,.topbar>button,.fieldpick>button,#helpBtn{min-height:40px}
+    .pausebtn{min-height:36px;padding:7px 12px}
+    summary{padding:13px 12px}
+    .fmenu button{padding:12px 10px}
+    .small{min-height:36px}
+    footer a{display:inline-block;padding:8px 4px}
+    .ac div{padding:12px}
+  }
+  /* with Home in the top-left, go icon-only a little earlier so the two button groups never touch */
+  @media (max-width:480px){
+    .lbl{display:none}
+    .sw{margin-right:0}
+  }
+  @media (max-width:400px){
+    .acctbtn,.homebtn,.topbar>button,.fieldpick>button{padding:7px 8px;min-width:36px}
+    .topbar{gap:4px;right:10px}
+    .leftbar{left:10px;gap:4px}
+    .dist .b>span{width:54px}
+  }
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<canvas id="confetti"></canvas>
+<div class="leftbar">
+  <button class="ghost homebtn" id="homeBtn" aria-label="Home" title="Home">🏠</button>
+  <button class="ghost acctbtn" id="acctBtn" aria-haspopup="dialog" aria-label="Profile">👤 <span class="lbl">SIGN IN</span></button>
+</div>
+<div class="topbar">
+  <button class="ghost" id="statsBtn" aria-haspopup="dialog" aria-label="Daily stats" title="Daily stats">📊</button>
+  <button class="ghost" id="helpBtn" aria-label="How to play">?</button>
+  <div class="fieldpick">
+    <button class="ghost" id="fieldBtn" aria-haspopup="true" aria-label="Choose field colour"><i class="sw" id="fieldSw"></i><span class="lbl">FIELD</span></button>
+    <div class="fmenu" id="fmenu">
+      <button data-f="green"><i class="sw" style="background:#1f6b33"></i>GREEN</button>
+      <button data-f="blue"><i class="sw" style="background:#0b3fa6"></i>BLUE</button>
+      <button data-f="red"><i class="sw" style="background:#a01722"></i>RED</button>
+    </div>
+  </div>
+  <div class="fieldpick">
+    <button class="ghost" id="themeBtn" aria-haspopup="true" aria-label="Choose colour theme">☾ DARK</button>
+    <div class="fmenu" id="tmenu">
+      <button data-t="dark">☾ DARK</button>
+      <button data-t="light">☀ LIGHT</button>
+      <button data-t="christmas">❄ CHRISTMAS</button>
+      <label class="lightsopt"><input type="checkbox" id="lightsT" checked> STRING LIGHTS</label>
+      <label class="lightsopt always"><input type="checkbox" id="soundT" checked> SOUND</label>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+
+  <header>
+    <h1><a href="./" id="homeLogo" title="Home">PYLON DAILY</a></h1>
+    <div class="tag">7 PLAYS · 100 YARDS · CLOSER IS BETTER</div>
+  </header>
+
+  <div class="settings" id="settings" role="group" aria-label="Game mode">
+    <span class="k">MODE</span>
+    <button data-m="standard">STANDARD<small>25 seconds a play</small></button>
+    <button data-m="speed">SPEED<small>5 seconds a play</small></button>
+    <button data-m="learning">LEARNING<small>no clock · averages shown</small></button>
+  </div>
+  <div class="settings scoring" id="scoringBar" role="group" aria-label="Fantasy points per game">
+    <span class="k">FANTASY PPG</span>
+    <button data-s="ppr">FULL PPR<small>1 point per catch</small></button>
+    <button data-s="half">HALF PPR<small>0.5 per catch</small></button>
+    <button data-s="std">STANDARD<small>no points per catch</small></button>
+  </div>
+  <div class="settings scoring" id="yardsBar" role="group" aria-label="Yards per game">
+    <span class="k">YARDS</span>
+    <button data-s="pass">PASSING<small>QBs</small></button>
+    <button data-s="rush">RUSHING<small>RBs and QBs</small></button>
+    <button data-s="rec">RECEIVING<small>RBs, WRs, TEs</small></button>
+    <button data-s="all">ALL<small>pass + rush + catch</small></button>
+  </div>
+  <div class="filterrow"><label><input type="checkbox" id="rookieT"> ROOKIES ONLY <small id="rookieNote">2026 class</small></label></div>
+
+  <div class="pnpbar" id="pnpBar" hidden></div>
+
+  <div class="board">
+    <div class="cell"><div class="k">BALL ON</div><div class="v" id="sYd">0</div></div>
+    <div class="cell"><div class="k">PLAY</div><div class="v" id="sPlay">1 / 7</div></div>
+    <div class="cell"><div class="k">TO GO</div><div class="v hot" id="sGo">100</div></div>
+  </div>
+
+  <div class="field" id="field">
+    <div class="hashrow top"></div>
+    <div class="hashrow bot"></div>
+    <div class="ez"><span>END ZONE</span></div>
+    <div class="ball" id="ball" style="left:2%">🏈</div>
+    <div class="gain" id="gain"></div>
+  </div>
+
+  <div class="panel" id="panel"></div>
+
+  <details id="poolBox">
+    <summary>SHOW THE PLAYER POOL</summary>
+    <div class="pool" id="pool"></div>
+  </details>
+
+  <details id="suggest">
+    <summary>HAVE AN IDEA? SEND A SUGGESTION</summary>
+    <form class="sgwrap" id="sgForm" novalidate>
+      <p>Ideas, bugs, a player who's missing or a number that looks wrong: it goes straight to the person who makes this game.</p>
+      <div class="sggrid">
+        <div>
+          <label for="sgKind">TYPE</label>
+          <select id="sgKind">
+            <option>Feature idea</option><option>Bug</option><option>Player data</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="sgName">YOUR NAME (OPTIONAL)</label>
+          <input type="text" id="sgName" maxlength="40" autocomplete="name">
+        </div>
+      </div>
+      <label for="sgMsg">SUGGESTION</label>
+      <textarea id="sgMsg" maxlength="2000" required placeholder="What should be added, changed or fixed?"></textarea>
+      <label for="sgEmail">EMAIL FOR A REPLY (OPTIONAL)</label>
+      <input type="email" id="sgEmail" maxlength="120" autocomplete="email" placeholder="only if you'd like an answer">
+      <div class="hp" aria-hidden="true"><input type="checkbox" id="sgBot" tabindex="-1" autocomplete="off"></div>
+      <div class="sgfoot">
+        <small id="sgCount">0 / 2000</small>
+        <button type="button" id="sgSend">SEND ▸</button>
+      </div>
+      <div class="sgoff" id="sgOff" hidden>Not connected yet: the site owner still needs to add their email key.</div>
+      <div class="sgstatus" id="sgStatus" aria-live="polite"></div>
+    </form>
+  </details>
+
+  <div class="log" id="log"></div>
+
+  <footer>
+    <span id="dataNote"></span><br>
+    <span id="dataCount"></span><br>
+    Stats: nflverse player data (the same numbers as fantasytools.ai). Not affiliated with the NFL.<br>
+    <a href="about.html">About &amp; privacy</a> · <a href="#suggest" id="sgLink">Send a suggestion</a>
+  </footer>
+</div>
+
+<div class="modal" id="tut" role="dialog" aria-modal="true" aria-label="How to play"><div class="card tut" id="tutCard"></div></div>
+<div class="modal" id="acct" role="dialog" aria-modal="true" aria-label="Profile and data"><div class="card" id="acctCard"></div></div>
+<div class="modal" id="statsM" role="dialog" aria-modal="true" aria-label="Daily stats"><div class="card" id="statsCard"></div></div>
+
+<script>
+// Season lines: name,team,games,full-PPR total,standard total. Half-PPR is the midpoint of the two.
+// Source: fantasytools.ai fantasy points leaders (nflverse data), 2026 season through Week 10, as of Nov 13, 2026.
+const RAW = {
+QB:"Josh Allen,BUF,8,200.7,199.7;Joe Burrow,CIN,8,199.1,199.1;Jordan Love,GB,9,185,185;Drake Maye,NE,9,179.2,179.2;Kirk Cousins,LV,9,172.3,172.3;Brock Purdy,SF,8,171.3,171.3;Dak Prescott,DAL,9,167.4,167.4;C.J. Stroud,HOU,8,164,164;Jared Goff,DET,8,147.4,147.4;Trevor Lawrence,JAX,8,147.2,147.2;Bryce Young,CAR,8,146.6,146.6;Tyler Shough,NO,8,145.6,145.6;Matthew Stafford,LAR,9,142.9,142.9;Patrick Mahomes,KC,8,142,142;Jayden Daniels,WAS,7,136,136;Bo Nix,DEN,9,130.8,130.8;Geno Smith,NYJ,9,130.5,130.5;Deshaun Watson,CLE,8,117.9,117.9;Aaron Rodgers,PIT,8,117.1,117.1;Jacoby Brissett,ARI,8,111.2,110.2;Caleb Williams,CHI,6,110.3,110.3;Malik Willis,MIA,8,105,105;Cam Ward,TEN,8,100.5,100.5;Michael Penix Jr.,ATL,7,96.3,96.3;Sam Darnold,SEA,7,92.3,92.3;Daniel Jones,IND,9,81.5,81.5;Justin Herbert,LAC,8,80.6,80.6;Jalen Hurts,PHI,5,80,80;Lamar Jackson,BAL,5,79.1,79.1;Kyler Murray,MIN,6,73.6,73.6;Jameis Winston,NYG,8,73.3,73.3;Tyler Huntley,BAL,5,54.7,54.7;J.J. McCarthy,NYG,5,51.1,51.1;Baker Mayfield,TB,6,50.9,50.9;Drew Lock,SEA,3,46.8,46.8;Jalon Daniels,TB,5,35,34;Marcus Mariota,WAS,3,34.5,34.5;Tanner McKee,PHI,3,30.1,30.1;Jaxson Dart,NYG,2,27.4,27.4;Gardner Minshew,ARI,2,26.6,26.6;Case Keenum,CHI,2,25.2,25.2;Carson Wentz,MIN,3,22.8,22.8;Shedeur Sanders,CLE,3,22.8,22.8;Joe Milton III,PHI,1,13.2,13.2;Tyson Bagent,CHI,3,12.2,12.2;Athan Kaliakmanis,WAS,1,11,11;Kenny Pickett,CAR,3,5.4,5.4;Cooper Rush,ATL,2,5.2,5.2;DJ Uiagalelei,LAC,1,5,5;Max Brosmer,MIN,1,2.3,2.3;Tommy DeVito,NE,2,2.2,2.2;Fernando Mendoza,LV,1,2.2,2.2;Stetson Bennett,LAR,1,1.4,1.4",
+RB:"Jahmyr Gibbs,DET,8,209.2,175.2;Kenneth Walker III,KC,8,196.4,170.4;Bijan Robinson,ATL,9,180,149;Christian McCaffrey,SF,8,166.7,130.7;Javonte Williams,DAL,9,159.6,135.6;Kyren Williams,LAR,9,159.1,123.1;Bucky Irving,TB,9,159.1,137.1;D'Andre Swift,CHI,9,153.8,129.8;Jonathan Taylor,IND,9,153.6,127.6;James Cook,BUF,8,148.4,136.4;Chuba Hubbard,CAR,8,146.6,120.6;Derrick Henry,BAL,9,142.3,130.3;Jaylen Warren,PIT,8,140.8,115.8;Ashton Jeanty,LV,9,139.3,97.3;Bhayshul Tuten,JAX,8,127.2,112.2;Tony Pollard,TEN,8,116.5,102.5;Rhamondre Stevenson,NE,9,113.7,87.7;Braelon Allen,NYJ,9,105,86;Chase Brown,CIN,8,101.4,62.4;Cam Skattebo,NYG,7,97.6,83.6;Blake Corum,LAR,9,94.6,84.6;Quinshon Judkins,CLE,8,92.1,70.1;Tyler Allgeier,ARI,9,90.7,67.7;Aaron Jones,MIN,8,82.9,66.9;Ollie Gordon II,MIA,7,79.6,72.6;Rachaad White,WAS,8,77.9,58.9;Emanuel Wilson,SEA,7,74.8,68.8;Alvin Kamara,NO,7,73.7,48.7;Woody Marks,HOU,8,70.9,55.9;Omarion Hampton,LAC,8,68.2,57.2;RJ Harvey,DEN,6,67.4,42.4;Kenny Gainwell,TB,9,63.6,48.6;Jonah Coleman,DEN,5,62.9,49.9;J.K. Dobbins,DEN,9,62.5,53.5;Justice Hill,BAL,9,61.1,41.1;Emmett Johnson,KC,8,60.8,46.8;Kyle Monangai,CHI,4,59.3,54.3;Saquon Barkley,PHI,7,58.7,51.7;Chris Rodriguez Jr.,JAX,8,54.4,50.4;Breece Hall,NYJ,4,54.2,41.2;Jeremiyah Love,ARI,6,53.4,42.4;Brian Robinson,ATL,6,53.1,48.1;MarShawn Lloyd,GB,8,51.8,38.8;Keaton Mitchell,LAC,8,50.1,32.1;David Montgomery,HOU,5,45.5,38.5;Jacory Croskey-Merritt,WAS,5,44.9,39.9;Samaje Perine,CIN,8,44.9,36.9;Rico Dowdle,PIT,5,44.6,31.6;Josh Jacobs,GB,3,43.8,32.8;Kimani Vidal,LAC,7,43.8,33.8;Devin Singletary,NYG,6,39.7,29.7;Ty Johnson,BUF,6,39.1,22.1;Kendre Miller,NO,6,38.6,29.6;Kaelon Black,SF,8,37.7,34.7;Mike Washington Jr.,LV,9,37.6,34.6;George Holani,SEA,9,36.5,24.5;TreVeyon Henderson,NE,6,33.8,28.8;Seth McGowan,IND,9,32.7,27.7;Corey Kiner,NE,9,32,30;Roschon Johnson,CHI,7,31.9,22.9;Tyrone Tracy Jr.,NYG,7,31.9,26.9;Jadarian Price,SEA,5,31.5,21.5;Dylan Sampson,CLE,4,31.4,19.4;Travis Etienne,NO,3,30.9,19.9;Austin Ekeler,WAS,6,30.3,20.3;Dameon Pierce,PHI,3,30,23;Tyjae Spears,TEN,6,27.1,12.1;Jordan Mason,MIN,4,26.9,24.9;Sione Vaki,DET,8,26.9,19.9;Bam Knight,ARI,5,25.1,19.1;De'Von Achane,MIA,3,24.6,17.6;Kaleb Johnson,GB,7,23.2,22.2;Raheim Sanders,CLE,5,22.7,11.7;Audric Estime,NO,2,22.6,21.6;Tyler Goodson,DAL,6,22.6,18.6;Pierre Strong,GB,4,22,12;Sean Tucker,TB,5,20,20;Will Shipley,PHI,5,19.8,14.8;Elijah Mitchell,PHI,3,19.7,9.7;Jaleel McLaughlin,CLE,5,18.6,14.6;Dylan Laube,LV,9,18.4,14.4;Tank Bigsby,PHI,4,17.1,14.1;Tyler Badie,DEN,5,16.9,10.9;Isaiah Davis,NYJ,8,16.2,11.2;Zach Charbonnet,SEA,2,15.5,11.5;Chris Brooks,GB,4,12.4,9.4;Jawhar Jordan,HOU,1,12,11;Najee Harris,NYG,5,11.4,10.4;Ray Davis,BUF,7,11.4,8.4;CJ Donaldson,NO,6,11.1,7.1;Ameer Abdullah,JAX,8,11,9;DeeJay Dallas,MIN,8,10,5;Kaytron Allen,MIA,5,9.6,8.6;Jonathon Brooks,CAR,2,9.3,7.3;Khalil Herbert,ATL,3,9.2,5.2;Anthony Tyus III,CAR,5,8.3,8.3;Brady Russell,SEA,7,7,4;Hunter Luepke,DAL,7,6.7,2.7;AJ Dillon,CAR,4,6.6,4.6;Jordan James,SF,5,5.3,4.3;Trevor Etienne,CAR,4,5.2,3.2;Jeremy McNichols,WAS,2,5.1,4.1;Emari Demercado,HOU,3,4.9,3.9;DJ Giddens,IND,1,4.3,4.3;Jaylen Wright,MIA,6,4.1,4.1;Demond Claiborne,MIN,4,4.1,2.1;Lan Larison,NE,3,3.9,1.9;Velus Jones Jr.,SEA,3,3.7,2.7;Ronnie Rivers,LAR,2,3.4,2.4;LeQuint Allen Jr.,JAX,7,3,1;DJ Herman,MIA,2,2.8,1.8;Salvon Ahmed,CHI,1,2.5,2.5;Michael Carter,TEN,1,2.4,1.4;Rasheen Ali,BAL,8,2.4,2.4;Gregory Desrosiers,NYG,2,2,2;Jaydn Ott,KC,2,1.9,1.9;Jaydon Blue,PHI,2,1.9,0.9;Carlos Washington,MIA,1,1.8,0.8;Travis Homer,PIT,5,1.5,1.5;Reggie Gilliam,NE,1,1.4,0.4;Brashard Smith,KC,2,1.4,0.4;Carson Steele,PHI,2,1.4,0.4;Dare Ogunbowale,HOU,2,1.3,0.3;Nicholas Singleton,TEN,2,1.2,1.2;Patrick Ricard,NYG,2,1.1,0.1",
+WR:"Jaxon Smith-Njigba,SEA,9,232.1,161.1;CeeDee Lamb,DAL,9,201.8,131.8;Christian Watson,GB,9,176.9,127.9;Puka Nacua,LAR,7,173.6,103.6;Matthew Golden,GB,9,163.9,110.9;Tee Higgins,CIN,8,159.8,111.8;Ja'Marr Chase,CIN,8,159.7,106.7;Amon-Ra St. Brown,DET,8,157.6,96.6;Chris Olave,NO,8,141.4,85.4;Malik Nabers,NYG,9,137.2,79.2;Luther Burden III,CHI,9,136.3,87.3;Zay Flowers,BAL,8,127.5,84.5;Tetairoa McMillan,CAR,8,124.5,78.5;Drake London,ATL,9,121.6,77.6;Michael Wilson,ARI,9,120.7,69.7;Garrett Wilson,NYJ,8,113.7,70.7;Stefon Diggs,WAS,8,110.6,74.6;Parker Washington,JAX,8,109.6,80.6;Tre Tucker,LV,9,109.3,76.3;Jameson Williams,DET,8,105.7,77.7;George Pickens,DAL,8,104.3,65.3;Denzel Boston,CLE,9,102.7,70.7;Davante Adams,LAR,6,102,72;DeMario Douglas,NE,9,96.4,65.4;Justin Jefferson,MIN,7,95.2,64.2;Nico Collins,HOU,6,91.6,63.6;Devaughn Vele,NO,8,89.5,54.5;Mike Evans,SF,6,89,62;Rome Odunze,CHI,9,88.8,56.8;KC Concepcion,CLE,9,88.4,51.4;Jalen Coker,CAR,7,88,57;Ryan Flournoy,DAL,9,83.8,51.8;Jaylen Waddle,DEN,9,82,52;Keenan Allen,IND,8,81.1,41.1;Emeka Egbuka,TB,7,78,47;DK Metcalf,PIT,8,77.9,44.9;Carnell Tate,TEN,7,77.3,43.3;Wan'Dale Robinson,TEN,8,77.3,42.3;Khalil Shakir,BUF,8,76.2,45.2;Malik Washington,MIA,8,75.8,42.8;Jakobi Meyers,JAX,8,75.6,49.6;Josh Downs,IND,9,75.1,42.1;Makai Lemon,PHI,9,73.7,36.7;Antonio Williams,WAS,9,72.6,44.6;Keon Coleman,BUF,8,71.4,48.4;Kalif Raymond,CHI,9,70.7,38.7;DeVonta Smith,PHI,4,69,43;Germie Bernard,PIT,7,66.8,34.8;Xavier Worthy,KC,8,66.8,33.8;Jaylin Noel,HOU,7,66.7,47.7;Xavier Hutchinson,HOU,8,66.3,42.3;Rashee Rice,KC,5,66.2,41.2;Courtland Sutton,DEN,9,63.6,38.6;Jahan Dotson,ATL,9,63.3,47.3;Malachi Fields,NYG,9,63,41;Kayshon Boutte,HOU,8,62.9,43.9;Omar Cooper Jr.,NYJ,4,62.6,42.6;Caleb Douglas,MIA,5,60.6,41.6;Deebo Samuel Sr.,SF,5,60.4,44.4;DJ Moore,BUF,6,59.5,40.5;Romeo Doubs,NE,6,58.1,44.1;Chris Godwin Jr.,TB,9,57.9,28.9;Cooper Kupp,SEA,9,57.8,35.8;Darius Cooper,PHI,9,57,44;Rashod Bateman,BAL,9,55.4,35.4;Jordan Addison,MIN,7,53.9,35.9;Dontayvion Wicks,PHI,6,53.4,34.4;Kendrick Bourne,ARI,7,52.3,26.3;Treylon Burks,WAS,7,52,38;Ladd McConkey,LAC,6,51.6,34.6;Efton Chism III,NE,8,50.8,30.8;Adonai Mitchell,NYJ,5,48.5,32.5;Mack Hollins,NE,5,48.5,30.5;Pat Bryant,DEN,5,47.5,34.5;Tre Harris,LAC,7,47.2,26.2;Terry McLaurin,WAS,5,46,31;Quentin Johnston,LAC,7,45.8,32.8;Tyquan Thornton,KC,4,44.9,33.9;Roman Wilson,PIT,5,44.8,30.8;Tez Johnson,TB,9,44.4,33.4;Isaiah Williams,NYJ,9,43.4,31.4;Dohnte Meyers,CIN,8,42.8,24.8;Rashid Shaheed,SEA,7,42.2,26.2;Elic Ayomanor,TEN,8,40.1,27.1;Cody White,LV,7,39.2,31.2;Jerry Jeudy,CLE,8,38.8,20.8;Jordan Watkins,SF,4,38.4,28.4;Kyle Williams,NE,9,38,31;Marvin Harrison Jr.,HOU,7,37.5,26.5;Laquon Treadwell,IND,9,37.5,21.5;John Metchie III,CAR,7,35.4,21.4;Darnell Mooney,NYG,9,34.3,20.3;Ted Hurst III,TB,8,33.8,22.8;Brian Thomas Jr.,JAX,7,33.7,23.7;Josh Cameron,JAX,8,33.3,24.3;Konata Mumpfield,LAR,8,33.2,22.2;Savion Williams,GB,4,32.3,21.3;Jalen Nailor,LV,7,32.2,18.2;Isaac TeSlaa,DET,7,31.6,20.6;Kevin Coleman Jr.,MIA,7,29.8,21.8;Tory Horton,SEA,6,29.5,19.5;Chimere Dike,TEN,8,29.4,18.4;Chris Bell,MIA,8,29.2,17.2;Josh Palmer,BUF,5,27.7,23.7;Tank Dell,HOU,2,26,21;Demarcus Robinson,SF,3,24.6,16.6;Bryce Lance,NO,8,22.8,13.8;Marvin Mims Jr.,DEN,7,22.2,12.2;Jalen Royals,KC,8,20.3,12.3;Brycen Tremayne,CAR,8,19.6,12.6;Troy Franklin,DEN,8,19.5,10.5;Zachariah Branch,ATL,8,19.2,9.2;A.J. Brown,NE,3,19.1,10.1;Ashton Dulin,IND,5,19,15;Ryan Miller,MIA,3,18.2,15.2;Ja'Kobi Lane,BAL,5,17.9,8.9;Jack Bech,LV,3,17.7,11.7;Devontez Walker,BAL,5,17.5,13.5;Tutu Atwell,LAR,5,16.9,9.9;Van Jefferson,WAS,2,16.8,11.8;Brandin Cooks,SF,5,16.8,11.8;Dyami Brown,WAS,7,16.4,7.4;Barion Brown,NO,7,16.2,11.2;Michael Pittman,PIT,3,15.9,8.9;Chris Moore,BAL,3,15.3,12.3;Calvin Ridley,TEN,6,15.1,9.1;KaVontae Turpin,DAL,6,14.9,10.9;Deion Burks,IND,7,14.1,8.1;Isaiah Bond,CLE,5,13.6,8.6;Zavion Thomas,CHI,8,13.5,6.5;Myles Price,MIN,8,13.4,7.4;Jalen Brooks,ARI,6,13.1,8.1;Marquise Brown,PHI,4,12.5,7.5;KeAndre Lambert-Smith,LAC,3,12.2,6.2;Alec Pierce,IND,2,12.2,7.2;Ben Skowronek,PIT,3,12.2,9.2;Cyrus Allen,KC,6,11.5,6.5;Jauan Jennings,MIN,6,11.4,5.4;Jacob Cowing,SF,8,11.4,6.4;Mitchell Tinsley,CIN,3,11,6;LaJohntay Wester,BAL,9,10.8,5.8;Jared Wayne,MIA,5,10.5,6.5;Skyy Moore,GB,5,10.5,3.5;Derius Davis,LAC,8,10.5,8.5;Jonathan Mingo,DAL,7,9.3,5.3;Charlie Jones,NYG,6,8.6,6.6;Olamide Zaccheaus,ATL,8,8.6,2.6;Xavier Legette,CAR,2,8.4,6.4;Reggie Virgil,ARI,3,8.4,5.4;Bo Melton,GB,9,8.4,3.4;J. Michael Sturdivant,GB,8,7.8,3.8;Tim Patrick,NYJ,2,7.1,4.1;Tai Felton,MIN,4,7.1,4.1;Jahdae Walker,CHI,6,7.1,6.1;Theo Wease Jr.,LAC,2,6.7,3.7;Jayden Reed,GB,2,6.4,2.4;Devin Duvernay,ARI,9,6.2,2.2;Elijah Moore,PHI,3,5.7,1.7;Dareke Young,LV,7,5.6,3.6;KhaDarel Hodge,SF,4,5.5,3.5;Lil'Jordan Humphrey,DEN,4,5.3,2.3;Tylan Wallace,CLE,4,5.1,2.1;Jordyn Tyson,NO,1,5,1;Jalen Tolbert,MIA,3,5,3;Andrei Iosivas,CIN,2,4.9,1.9;Jaylin Lane,WAS,4,4.5,2.5;Brandon Smith,PIT,2,4.4,2.4;Jeshaun Jones,MIN,2,4.2,3.2;Marquez Valdes-Scantling,LAC,3,4.2,2.2;David Moore,CAR,6,3.7,2.7;Andrew Armstrong,KC,4,3.6,1.6;Chris Blair,ATL,7,3.6,2.6;Sterling Shepard,NYJ,2,3.3,2.3;Jordan Whittington,LAR,6,3.2,1.2;Colbie Young,CIN,2,2.9,0.9;Simi Fehoko,ARI,7,2.7,1.7;Anthony Gould,IND,6,2.6,1.6;Malik Benson,LV,7,2.4,0.4;Brenen Thompson,LAC,1,2.3,1.3;Elijah Sarratt,BAL,1,2.3,1.3;Jaden Bradley,WAS,1,2.2,1.2;Tay Martin,DET,6,2.1,1.1;Brandon Johnson,PIT,1,1.9,0.9;Deven Thompkins,LV,1,1.8,0.8;Justin Watson,KC,1,1.7,0.7;Kevin Austin Jr.,NO,1,1.7,0.7;Luke McCaffrey,WAS,6,1.6,0.6;DeAndre Carter,DET,3,1.5,0.5;Kameron Johnson,TB,8,1.3,0.3",
+TE:"Trey McBride,ARI,9,162.8,89.8;Isaiah Likely,NYG,9,156.5,101.5;Brock Bowers,LV,7,146,98;George Kittle,SF,8,114.3,76.3;Harold Fannin Jr.,CLE,9,102.3,65.3;Travis Kelce,KC,8,99.3,66.3;Sam LaPorta,DET,8,93.1,58.1;Tucker Kraft,GB,9,90.4,54.4;T.J. Hockenson,MIN,8,85.8,50.8;Dalton Kincaid,BUF,8,84.9,54.9;Tyler Warren,IND,7,84.1,46.1;Colston Loveland,CHI,9,83.3,46.3;Michael Mayer,LV,9,81.8,42.8;Mike Gesicki,CIN,7,80.2,61.2;Hunter Henry,NE,9,80.1,48.1;Pat Freiermuth,PIT,8,79,54;Juwan Johnson,NO,8,78.9,50.9;Darren Waller,CAR,8,76.9,53.9;Dallas Goedert,PHI,7,74,43;Brenton Strange,JAX,8,71.6,41.6;Dalton Schultz,HOU,8,71.4,36.4;Kyle Pitts,ATL,9,71,46;AJ Barner,SEA,9,62.8,39.8;Darnell Washington,PIT,8,62.4,43.4;Tyler Higbee,LAR,8,58.7,30.7;Mark Andrews,BAL,9,58.7,27.7;Tommy Tremble,CAR,8,56.9,35.9;Kenyon Sadiq,NYJ,9,54.8,33.8;Jake Ferguson,DAL,8,54.6,35.6;Greg Dulcich,MIA,7,53,29;Chig Okonkwo,WAS,7,51.3,24.3;Eli Raridon,NE,8,50.5,34.5;Mason Taylor,NYJ,6,46.7,28.7;Cade Otton,TB,8,44.1,21.1;Oronde Gadsden II,LAC,8,42.4,23.4;Elijah Higgins,ARI,8,40.2,22.2;Evan Engram,DEN,9,39.9,22.9;Noah Fant,NO,7,39.6,27.6;Noah Gray,KC,8,39.4,24.4;Gunnar Helm,TEN,7,37,20;Foster Moreau,HOU,6,36.2,25.2;Colby Parkinson,LAR,7,35.6,17.6;Nate Boerkircher,JAX,7,35.4,26.4;Davis Allen,LAR,8,33.1,21.1;Josh Cuevas,BAL,7,29.4,19.4;Nate Adkins,DEN,6,29,23;Brevyn Spann-Ford,DAL,9,28,13;Dawson Knox,BUF,8,26.9,13.9;Mitchell Evans,CAR,8,26.8,14.8;Cole Kmet,CHI,7,24.7,14.7;Charlie Kolar,LAC,6,24.2,11.2;Austin Hooper,ATL,6,22.6,13.6;Matthew Hibner,BAL,6,19.5,13.5;Terrance Ferguson,LAR,3,19.3,12.3;Jeremy Ruckert,NYJ,4,18.8,10.8;Drew Sample,CIN,4,17.8,10.8;Teagan Quitoriano,ARI,2,17.3,14.3;Theo Johnson,NYG,5,17.3,12.3;Ian Thomas,LV,4,17,12;Tanner Hudson,CIN,4,16.3,9.3;Daniel Bellinger,TEN,8,16,7;Ben Sinnott,WAS,4,15.8,10.8;Jonnu Smith,GB,4,15.4,9.4;Blake Whiteheart,CLE,6,14.8,10.8;Erick All,CIN,3,13.6,5.6;Mo Alie-Cox,IND,4,13.1,9.1;David Njoku,LAC,2,12.7,6.7;Gavin Bartholomew,MIN,3,12.4,5.4;Charlie Woerner,ATL,6,11.6,8.6;Adam Trautman,DEN,5,11.5,5.5;Eric Saubert,SEA,8,11,8;Sam Roush,CHI,6,10.6,5.6;Keleki Latu,BUF,7,9.5,8.5;Jack Endries,CIN,2,8.5,6.5;Eli Stowers,PHI,3,8.3,5.3;Nick Muse,ATL,7,8.2,6.2;Brock Wright,DET,5,8.1,3.1;Jelani Woods,NYJ,6,7.9,3.9;Hayden Rucci,LAC,4,7.7,6.7;John Bates,WAS,6,7.7,2.7;Josh Oliver,MIN,3,7.6,4.6;Cade Stover,HOU,5,7.2,4.2;Will Kacmarek,MIA,7,7,3;Luke Farrell,SF,8,6.3,3.3;Luke Schoonmaker,DAL,3,6,3;Oscar Delp,NO,6,6,2;Johnny Mundt,PHI,5,5.6,1.6;Ben Yurosek,MIN,3,5.4,3.4;Tanner Koziol,JAX,2,5.3,2.3;Zach Ertz,PHI,3,5.2,2.2;Colson Yankoff,WAS,8,5.2,2.2;Mark Redman,GB,2,4.9,2.9;Jake Briningstool,KC,5,4.8,1.8;Andrew Ogletree,IND,6,4.6,1.6;Will Mallory,IND,2,4,2;Thomas Fidone II,NYG,2,3.9,2.9;Hunter Long,ARI,4,3.5,1.5;Jackson Hawes,BUF,5,3.5,1.5;Brevin Jordan,HOU,5,3.2,1.2;Tyler Conklin,DET,3,3.1,1.1;Bauer Sharp,TB,7,3.1,2.1;Elijah Arroyo,SEA,2,2.7,1.7;Marlin Klein,HOU,1,2.6,1.6;Jackson Meeks,DET,1,1.8,0.8;Pharaoh Brown,IND,1,1.7,0.7;Quintin Morris,JAX,6,1.7,0.7;Payne Durham,TB,3,1.5,0.5;Durham Smythe,BAL,3,1.4,0.4;Robert Tonyan,PIT,1,1.2,0.2"
+};
+// Yards options: name,team,games played,passing yds,rushing yds,receiving yds,flags (p = threw a pass, r = had a carry,
+// c = had a catch). Every QB, RB (fullbacks included), WR and TE with a pass, carry or catch, plus two-way Travis Hunter.
+// nflverse player stats, 2026 regular season through Week 10. Checked Nov 15: passing 61/61 vs BettingPros; rushing (RBs and
+// QBs) vs StatSniper and BettingPros; receiving 99/99 vs StatSniper and BettingPros. Games played = games with a snap.
+const RAW_YDS = {
+QB:"Jordan Love,GB,9,2618,23,0,pr;Drake Maye,NE,9,2282,219,0,pr;Dak Prescott,DAL,9,2381,102,0,pr;Joe Burrow,CIN,8,2386,77,0,pr;Matthew Stafford,LAR,9,2374,19,0,pr;C.J. Stroud,HOU,8,2251,100,0,pr;Kirk Cousins,LV,9,2340,7,0,pr;Josh Allen,BUF,8,2027,285,1,prc;Bryce Young,CAR,8,2197,47,0,pr;Brock Purdy,SF,8,1980,201,0,pr;Jared Goff,DET,8,2134,20,0,pr;Tyler Shough,NO,8,1986,162,0,pr;Geno Smith,NYJ,9,2078,54,0,pr;Patrick Mahomes,KC,8,2037,85,0,pr;Deshaun Watson,CLE,8,1806,217,0,pr;Trevor Lawrence,JAX,8,1932,79,0,pr;Aaron Rodgers,PIT,8,1871,23,0,pr;Bo Nix,DEN,9,1730,116,0,pr;Jacoby Brissett,ARI,8,1719,87,7,prc;Daniel Jones,IND,9,1722,86,0,pr;Justin Herbert,LAC,8,1591,190,0,pr;Jayden Daniels,WAS,7,1499,280,0,pr;Caleb Williams,CHI,6,1546,145,0,pr;Malik Willis,MIA,8,1396,232,0,pr;Cam Ward,TEN,8,1483,112,0,pr;Sam Darnold,SEA,7,1478,72,0,pr;Michael Penix Jr.,ATL,7,1444,65,0,pr;Kyler Murray,MIN,6,1022,167,0,pr;Lamar Jackson,BAL,5,967,144,0,pr;Jameis Winston,NYG,8,1028,62,0,pr;Jalen Hurts,PHI,5,933,107,0,pr;Baker Mayfield,TB,6,922,80,0,pr;J.J. McCarthy,NYG,5,915,85,0,pr;Tyler Huntley,BAL,5,727,76,0,pr;Tanner McKee,PHI,3,638,26,0,pr;Drew Lock,SEA,3,597,29,0,pr;Jalon Daniels,TB,5,501,123,-3,prc;Tyson Bagent,CHI,3,409,18,0,pr;Marcus Mariota,WAS,3,340,49,0,pr;Case Keenum,CHI,3,355,10,0,pr;Carson Wentz,MIN,3,357,5,0,pr;Gardner Minshew,ARI,2,354,4,0,pr;Shedeur Sanders,CLE,3,299,28,0,pr;Jaxson Dart,NYG,2,250,54,0,pr;Cooper Rush,ATL,2,229,20,0,pr;Joe Milton III,PHI,1,169,64,0,pr;Athan Kaliakmanis,WAS,1,186,16,0,pr;Joe Fagnano,BAL,2,151,16,0,pr;Kenny Pickett,CAR,3,47,35,0,pr;Jack Strand,ATL,1,59,16,0,pr;Max Brosmer,MIN,1,58,0,0,p;Tommy DeVito,NE,2,51,2,0,pr;Fernando Mendoza,LV,1,48,3,0,pr;Tua Tagovailoa,ATL,1,34,0,0,p;DJ Uiagalelei,LAC,1,24,0,0,p;Stetson Bennett,LAR,2,13,9,0,pr;Anthony Richardson,IND,1,8,4,0,pr;Quinn Ewers,JAX,2,8,0,0,p;Davis Mills,HOU,1,7,-2,0,pr;Mason Rudolph,PIT,3,0,1,0,pr;Andy Dalton,PHI,1,0,0,0,p;Justin Fields,KC,2,0,-1,0,r;Tyrod Taylor,GB,2,0,-2,0,r;Nick Mullens,JAX,1,0,-3,0,r;Kyle Allen,BUF,2,0,-4,0,r;Mac Jones,SF,2,0,-5,0,r",
+RB:"Jahmyr Gibbs,DET,8,0,847,285,rc;Bijan Robinson,ATL,9,0,880,250,rc;Kenneth Walker III,KC,8,0,872,172,rc;Jaylen Warren,PIT,8,0,704,294,rc;Bucky Irving,TB,9,0,825,106,rc;James Cook,BUF,8,0,814,110,rc;Jonathan Taylor,IND,9,0,656,220,rc;Kyren Williams,LAR,9,0,593,258,rc;Chuba Hubbard,CAR,8,0,619,167,rc;Derrick Henry,BAL,9,-3,689,75,prc;Javonte Williams,DAL,9,0,629,127,rc;D'Andre Swift,CHI,9,0,576,162,rc;Ashton Jeanty,LV,9,0,362,371,rc;Christian McCaffrey,SF,8,0,457,270,rc;Bhayshul Tuten,JAX,8,0,521,181,rc;Braelon Allen,NYJ,9,0,598,102,rc;Tony Pollard,TEN,8,0,595,70,rc;Rhamondre Stevenson,NE,9,0,399,258,rc;Cam Skattebo,NYG,8,0,496,120,rc;Chase Brown,CIN,8,0,397,207,rc;Aaron Jones,MIN,8,0,474,95,rc;Blake Corum,LAR,9,0,447,99,rc;Quinshon Judkins,CLE,8,0,385,136,rc;Tyler Allgeier,ARI,9,0,369,128,rc;Ollie Gordon II,MIA,8,0,463,23,rc;Emanuel Wilson,SEA,8,0,403,65,rc;Woody Marks,HOU,8,0,341,98,rc;Omarion Hampton,LAC,8,0,369,63,rc;Kenny Gainwell,TB,9,0,305,121,rc;Rachaad White,WAS,8,0,275,134,rc;Kyle Monangai,CHI,4,0,324,39,rc;J.K. Dobbins,DEN,9,0,324,31,rc;Breece Hall,NYJ,4,0,224,128,rc;Justice Hill,BAL,9,0,240,111,rc;Emmett Johnson,KC,8,0,111,237,rc;Saquon Barkley,PHI,7,0,296,41,rc;Jonah Coleman,DEN,5,0,191,128,rc;Alvin Kamara,NO,7,0,157,150,rc;Kaelon Black,SF,8,0,303,4,rc;RJ Harvey,DEN,6,0,87,217,rc;Jeremiyah Love,ARI,6,0,268,36,rc;Mike Washington Jr.,LV,9,0,275,11,rc;Keaton Mitchell,LAC,8,0,178,103,rc;Jacory Croskey-Merritt,WAS,5,0,239,40,rc;Chris Rodriguez Jr.,JAX,8,0,228,36,rc;Corey Kiner,NE,9,0,244,16,rc;Rico Dowdle,PIT,5,0,174,82,rc;Jadarian Price,SEA,5,0,172,83,rc;Samaje Perine,CIN,8,0,179,70,rc;TreVeyon Henderson,NE,6,0,203,45,rc;Brian Robinson,ATL,6,0,211,30,rc;MarShawn Lloyd,GB,8,0,149,79,rc;Ty Johnson,BUF,6,0,11,210,rc;Kimani Vidal,LAC,8,0,162,56,rc;Seth McGowan,IND,9,0,208,9,rc;Bam Knight,ARI,8,0,168,43,rc;David Montgomery,HOU,5,0,138,67,rc;George Holani,SEA,9,0,117,88,rc;Sione Vaki,DET,8,0,135,64,rc;Kendre Miller,NO,6,0,159,37,rc;Dylan Sampson,CLE,4,0,73,121,rc;Jordan Mason,MIN,4,0,182,7,rc;Roschon Johnson,CHI,9,0,103,86,rc;Tyler Goodson,DAL,7,0,163,23,rc;Austin Ekeler,WAS,6,0,109,74,rc;Kaleb Johnson,GB,7,0,172,10,rc;Travis Etienne,NO,3,0,128,51,rc;Devin Singletary,NYG,6,0,114,63,rc;De'Von Achane,MIA,3,0,127,49,rc;Josh Jacobs,GB,3,0,80,68,rc;Tyjae Spears,TEN,6,0,66,75,rc;Pierre Strong,GB,5,0,59,61,rc;Raheim Sanders,CLE,5,0,43,74,rc;Zach Charbonnet,SEA,2,0,100,15,rc;Isaiah Davis,NYJ,9,0,44,68,rc;Dameon Pierce,PHI,3,0,96,14,rc;Tyrone Tracy Jr.,NYG,7,0,55,54,rc;Najee Harris,NYG,5,0,99,5,rc;Tank Bigsby,PHI,4,0,91,10,rc;Elijah Mitchell,PHI,3,0,51,46,rc;Audric Estime,NO,2,0,91,5,rc;Chris Brooks,GB,4,0,70,24,rc;CJ Donaldson,NO,7,0,81,10,rc;Ameer Abdullah,JAX,8,0,88,2,rc;Tyler Badie,DEN,5,0,22,67,rc;Will Shipley,PHI,5,0,57,31,rc;Jaleel McLaughlin,CLE,7,0,72,14,rc;Kaytron Allen,MIA,7,0,40,46,rc;Ray Davis,BUF,8,0,44,40,rc;Kyle Juszczyk,SF,7,0,4,76,rc;Sean Tucker,TB,7,0,80,0,r;Jonathon Brooks,CAR,2,0,30,43,rc;Khalil Herbert,ATL,3,0,28,24,rc;DeeJay Dallas,MIN,8,0,14,36,rc;Jawhar Jordan,HOU,1,0,43,7,rc;AJ Dillon,CAR,4,0,43,3,rc;Jordan James,SF,6,0,32,11,rc;DJ Giddens,IND,1,0,43,0,r;Jeremy McNichols,WAS,2,0,34,7,rc;Jaylen Wright,MIA,6,0,41,0,r;Brady Russell,SEA,9,0,0,40,c;Emari Demercado,HOU,3,0,31,8,rc;Alec Ingold,LAC,5,0,0,35,c;Trevor Etienne,CAR,4,0,15,17,rc;Velus Jones Jr.,SEA,6,0,28,-1,rc;Hunter Luepke,DAL,9,0,16,11,rc;Salvon Ahmed,CHI,1,0,25,0,r;Ronnie Rivers,LAR,3,0,19,5,rc;Dylan Laube,LV,9,0,9,15,rc;Rasheen Ali,BAL,9,0,24,0,r;Anthony Tyus III,CAR,6,0,23,0,r;Demond Claiborne,MIN,4,0,13,8,rc;Connor Heyward,LV,9,0,-2,22,rc;Gregory Desrosiers,NYG,2,0,20,0,r;Lan Larison,NE,3,0,10,9,rc;Jaydn Ott,KC,3,0,19,0,r;DJ Herman,MIA,8,0,0,18,c;Travis Homer,PIT,7,0,15,0,r;Adam Prentice,DEN,9,0,3,12,rc;Michael Carter,TEN,3,0,7,7,rc;Nicholas Singleton,TEN,4,0,12,0,r;LeQuint Allen Jr.,JAX,8,0,1,9,rc;Jaydon Blue,PHI,2,0,0,9,c;Carlos Washington,MIA,2,0,0,8,c;Lew Nichols III,PIT,6,0,6,0,r;Tahj Brooks,CIN,8,0,6,0,r;Zamir White,NO,1,0,5,0,r;Craig Reynolds,WAS,1,0,4,0,r;Reggie Gilliam,NE,4,0,0,4,c;Carson Steele,PHI,2,0,0,4,c;Brashard Smith,KC,5,0,0,4,c;Robert Henry Jr.,WAS,1,0,4,0,r;Dare Ogunbowale,HOU,5,0,0,3,c;Frank Gore Jr.,BUF,2,0,3,0,r;Kalel Mullings,TEN,2,0,3,0,r;Michael Burton,CLE,9,0,2,0,r;Patrick Ricard,NYG,9,0,0,1,c;Andrew Beck,NYJ,9,0,-1,0,r",
+WR:"Jaxon Smith-Njigba,SEA,9,14,29,1036,prc;CeeDee Lamb,DAL,9,0,-6,904,rc;Christian Watson,GB,9,0,0,879,c;Matthew Golden,GB,9,0,6,783,rc;Tee Higgins,CIN,8,0,0,758,c;Puka Nacua,LAR,7,0,41,715,rc;Chris Olave,NO,8,0,0,734,c;Drake London,ATL,9,0,4,692,rc;Malik Nabers,NYG,9,0,0,692,c;Luther Burden III,CHI,9,0,29,644,rc;Amon-Ra St. Brown,DET,8,0,9,657,rc;Zay Flowers,BAL,8,0,51,614,rc;Ja'Marr Chase,CIN,8,0,0,647,c;Tetairoa McMillan,CAR,8,0,0,625,c;Michael Wilson,ARI,9,7,28,546,prc;George Pickens,DAL,8,0,0,533,c;Rome Odunze,CHI,9,0,0,528,c;Garrett Wilson,NYJ,8,0,0,527,c;Tre Tucker,LV,9,0,-6,529,rc;Denzel Boston,CLE,9,0,0,507,c;Parker Washington,JAX,8,0,13,493,rc;Davante Adams,LAR,6,0,0,480,c;Jameson Williams,DET,8,0,9,468,rc;KC Concepcion,CLE,9,0,37,437,rc;DeMario Douglas,NE,9,0,0,434,c;Mike Evans,SF,6,0,0,420,c;Carnell Tate,TEN,7,0,0,413,c;Khalil Shakir,BUF,8,0,0,412,c;Ryan Flournoy,DAL,9,0,3,395,rc;Nico Collins,HOU,6,0,12,384,rc;Jalen Coker,CAR,7,0,-3,393,rc;DK Metcalf,PIT,8,0,11,378,rc;Malik Washington,MIA,8,0,38,350,rc;Stefon Diggs,WAS,8,0,0,386,c;Justin Jefferson,MIN,7,0,-11,393,rc;Jakobi Meyers,JAX,8,0,2,374,rc;Devaughn Vele,NO,8,0,0,365,c;Josh Downs,IND,9,0,7,354,rc;Jaylen Waddle,DEN,9,0,23,337,rc;Jaylin Noel,HOU,7,0,26,331,rc;Jahan Dotson,ATL,9,0,0,353,c;Keenan Allen,IND,8,0,0,351,c;Malachi Fields,NYG,9,0,0,350,c;Kalif Raymond,CHI,9,0,37,290,rc;Antonio Williams,WAS,9,0,0,326,pc;Kayshon Boutte,HOU,8,0,0,319,c;DeVonta Smith,PHI,4,0,0,310,c;Makai Lemon,PHI,9,0,-5,312,rc;Omar Cooper Jr.,NYJ,5,0,0,306,c;DJ Moore,BUF,6,0,20,285,rc;Keon Coleman,BUF,8,0,0,304,c;Xavier Hutchinson,HOU,8,0,16,287,rc;Caleb Douglas,MIA,5,0,0,296,c;Rashod Bateman,BAL,9,0,0,294,c;Rashee Rice,KC,6,0,0,292,c;Emeka Egbuka,TB,7,0,12,278,rc;Chris Godwin Jr.,TB,9,0,30,259,rc;Germie Bernard,PIT,8,0,4,284,rc;Ladd McConkey,LAC,6,0,0,286,c;Deebo Samuel Sr.,SF,5,0,78,206,rc;Dontayvion Wicks,PHI,6,0,0,284,c;Jordan Addison,MIN,7,0,2,277,rc;Xavier Worthy,KC,8,0,0,278,c;Tez Johnson,TB,9,0,20,254,rc;Quentin Johnston,LAC,7,0,8,260,rc;Courtland Sutton,DEN,9,0,0,266,c;Adonai Mitchell,NYJ,5,0,0,265,c;Kendrick Bourne,ARI,8,0,0,263,c;Wan'Dale Robinson,TEN,8,0,1,262,rc;Tre Harris,LAC,7,0,0,262,pc;Romeo Doubs,NE,6,0,0,261,c;Treylon Burks,WAS,7,0,0,260,c;Dohnte Meyers,CIN,8,0,26,222,rc;Mack Hollins,NE,5,0,0,245,c;Cooper Kupp,SEA,9,0,0,238,c;Terry McLaurin,WAS,5,0,0,230,c;Jordan Watkins,SF,6,0,0,224,c;Tyquan Thornton,KC,4,0,0,219,c;Efton Chism III,NE,8,16,2,200,prc;Laquon Treadwell,IND,9,0,0,215,c;Elic Ayomanor,TEN,8,0,0,211,c;Jerry Jeudy,CLE,9,0,0,208,c;Isaac TeSlaa,DET,8,0,0,206,c;Pat Bryant,DEN,5,0,16,189,rc;Darnell Mooney,NYG,9,0,28,175,rc;Rashid Shaheed,SEA,7,0,39,163,rc;Darius Cooper,PHI,9,0,0,200,c;Isaiah Williams,NYJ,9,0,25,169,rc;Kyle Williams,NE,9,0,0,190,c;Roman Wilson,PIT,5,0,0,188,c;Chris Bell,MIA,8,0,24,148,rc;Ted Hurst III,TB,9,0,0,168,c;Konata Mumpfield,LAR,9,0,0,162,c;John Metchie III,CAR,7,0,0,154,c;Savion Williams,GB,4,0,44,109,rc;Tank Dell,HOU,2,0,2,148,rc;Marvin Harrison Jr.,HOU,7,0,0,145,c;Brycen Tremayne,CAR,8,0,0,126,c;Chimere Dike,TEN,8,0,0,124,c;Josh Cameron,JAX,8,0,0,123,c;Jalen Nailor,LV,8,0,0,122,c;Marvin Mims Jr.,DEN,7,0,30,92,rc;Josh Palmer,BUF,6,0,0,117,c;Brian Thomas Jr.,JAX,8,0,0,117,c;Tory Horton,SEA,8,0,0,115,c;Cody White,LV,7,0,0,112,c;Barion Brown,NO,7,0,-2,114,rc;Demarcus Robinson,SF,3,0,0,106,c;Troy Franklin,DEN,9,0,5,100,rc;A.J. Brown,NE,3,0,0,101,c;Tutu Atwell,LAR,6,0,0,99,c;Kevin Coleman Jr.,MIA,8,0,16,82,rc;Dyami Brown,WAS,7,0,0,94,pc;Ryan Miller,MIA,6,0,0,92,c;Calvin Ridley,TEN,7,0,0,91,c;Ashton Dulin,IND,5,0,6,84,rc;Michael Pittman,PIT,3,0,0,89,c;Ja'Kobi Lane,BAL,5,0,0,89,c;Isaiah Bond,CLE,9,0,0,86,c;Travis Hunter,JAX,8,0,8,75,rc;KeAndre Lambert-Smith,LAC,4,0,0,82,c;Jalen Brooks,ARI,7,0,0,81,c;Deion Burks,IND,9,0,21,60,rc;Bryce Lance,NO,8,0,0,78,c;Marquise Brown,PHI,4,0,12,63,rc;Devontez Walker,BAL,8,0,0,75,c;Alec Pierce,IND,2,0,0,72,c;Zachariah Branch,ATL,8,0,8,64,rc;Charlie Jones,NYG,6,0,0,66,c;Jared Wayne,MIA,7,0,0,65,c;Cyrus Allen,KC,8,0,0,65,c;Zavion Thomas,CHI,9,0,11,54,rc;Xavier Legette,CAR,2,0,0,64,c;Jacob Cowing,SF,8,0,12,52,rc;Chris Moore,BAL,4,0,0,63,c;Jalen Royals,KC,8,0,0,63,c;Mitchell Tinsley,CIN,4,0,0,60,c;Brandin Cooks,SF,5,0,0,58,c;Van Jefferson,WAS,4,0,0,58,c;LaJohntay Wester,BAL,9,0,0,58,c;Jack Bech,LV,5,0,0,57,c;Jauan Jennings,MIN,6,0,0,54,c;Reggie Virgil,ARI,5,0,0,54,c;Jonathan Mingo,DAL,9,0,0,53,c;KaVontae Turpin,DAL,6,0,10,39,rc;Tim Patrick,NYJ,3,0,0,41,c;Tai Felton,MIN,8,0,0,41,c;J. Michael Sturdivant,GB,8,0,0,38,c;Theo Wease Jr.,LAC,2,0,0,37,c;Dareke Young,LV,9,0,0,36,c;KhaDarel Hodge,SF,4,0,0,35,c;Skyy Moore,GB,5,0,0,35,c;Bo Melton,GB,9,0,0,34,c;Myles Price,MIN,8,0,2,32,rc;Ben Skowronek,PIT,5,0,0,32,c;Jeshaun Jones,MIN,2,0,0,32,c;Jalen Tolbert,MIA,4,0,0,30,c;Jordyn Tyson,NO,1,0,0,30,c;David Moore,CAR,6,0,0,27,c;Olamide Zaccheaus,ATL,8,0,0,26,c;Derius Davis,LAC,8,0,4,21,rc;Jaylin Lane,WAS,4,0,0,25,c;Brandon Smith,PIT,4,0,0,24,c;Jayden Reed,GB,2,0,0,24,c;Lil'Jordan Humphrey,DEN,5,0,0,23,c;Marquez Valdes-Scantling,LAC,3,0,0,22,c;Devin Duvernay,ARI,9,0,0,22,c;Tylan Wallace,CLE,7,0,0,21,c;Andrei Iosivas,CIN,2,0,0,19,c;Simi Fehoko,ARI,9,0,0,17,c;Elijah Moore,PHI,7,0,0,17,c;Anthony Gould,IND,6,0,0,16,c;Andrew Armstrong,KC,4,0,0,16,c;Elijah Sarratt,BAL,1,0,0,13,c;Brenen Thompson,LAC,2,0,0,13,c;Jordan Whittington,LAR,8,0,0,12,c;Jaden Bradley,WAS,1,0,0,12,c;Tay Martin,DET,8,0,0,11,c;Brandon Johnson,PIT,3,0,0,9,c;Colbie Young,CIN,6,0,0,9,c;Deven Thompkins,LV,1,0,0,8,c;Justin Watson,KC,2,0,0,7,c;Kevin Austin Jr.,NO,4,0,0,7,c;Chris Blair,ATL,9,0,0,6,c;Luke McCaffrey,WAS,6,0,0,6,c;DeAndre Carter,DET,3,0,0,5,c;Malik Benson,LV,7,0,-8,12,rc;Sterling Shepard,NYJ,2,0,0,3,c;Kameron Johnson,TB,9,0,0,3,c;Jahdae Walker,CHI,9,0,0,1,c",
+TE:"Brock Bowers,LV,7,0,2,658,rc;Trey McBride,ARI,9,0,0,598,c;Isaiah Likely,NYG,9,0,0,575,c;Travis Kelce,KC,8,0,1,482,rc;George Kittle,SF,8,0,0,483,c;Harold Fannin Jr.,CLE,9,0,0,453,c;Dalton Kincaid,BUF,8,0,0,429,c;Sam LaPorta,DET,8,0,2,399,rc;Michael Mayer,LV,9,0,0,388,c;Dalton Schultz,HOU,8,0,0,364,c;Tucker Kraft,GB,9,0,13,351,rc;Colston Loveland,CHI,9,0,0,363,c;Hunter Henry,NE,9,0,0,361,c;Brenton Strange,JAX,8,0,0,356,c;T.J. Hockenson,MIN,8,0,0,328,c;Dallas Goedert,PHI,7,0,2,308,rc;Darren Waller,CAR,8,0,0,299,c;Juwan Johnson,NO,8,0,0,289,c;Tyler Higbee,LAR,9,0,0,287,c;Tyler Warren,IND,7,0,6,275,rc;Greg Dulcich,MIA,8,0,0,270,c;Chig Okonkwo,WAS,7,0,0,263,c;Darnell Washington,PIT,8,0,0,254,c;Mike Gesicki,CIN,8,0,0,252,c;Pat Freiermuth,PIT,8,0,5,235,rc;Kenyon Sadiq,NYJ,9,0,3,235,rc;Mark Andrews,BAL,9,0,0,237,rc;Eli Raridon,NE,8,0,0,225,c;Kyle Pitts,ATL,9,0,0,220,c;AJ Barner,SEA,9,0,8,210,rc;Cade Otton,TB,9,0,0,211,c;Noah Gray,KC,8,0,0,184,c;Tommy Tremble,CAR,8,0,0,179,c;Oronde Gadsden II,LAC,8,0,2,172,rc;Evan Engram,DEN,9,0,0,169,c;Elijah Higgins,ARI,9,0,0,162,c;Gunnar Helm,TEN,8,0,0,160,c;Mitchell Evans,CAR,8,0,1,147,rc;Mason Taylor,NYJ,7,0,0,147,c;Nate Boerkircher,JAX,8,0,0,144,c;Jake Ferguson,DAL,9,0,0,136,c;Josh Cuevas,BAL,9,0,0,134,c;Charlie Kolar,LAC,6,0,3,129,rc;Brevyn Spann-Ford,DAL,9,0,0,130,c;Colby Parkinson,LAR,7,0,0,116,c;Noah Fant,NO,7,0,0,96,c;Jonnu Smith,GB,8,0,0,94,c;Davis Allen,LAR,9,0,0,91,rc;Cole Kmet,CHI,7,0,0,87,c;Dawson Knox,BUF,8,0,0,79,rc;Austin Hooper,ATL,9,0,0,76,c;Matthew Hibner,BAL,8,0,0,75,c;Foster Moreau,HOU,8,0,0,72,c;Daniel Bellinger,TEN,8,0,0,70,c;David Njoku,LAC,2,0,0,67,c;Theo Johnson,NYG,7,0,0,63,c;Terrance Ferguson,LAR,3,0,0,63,c;Ian Thomas,LV,9,0,0,60,c;Erick All,CIN,6,0,0,56,c;Sam Roush,CHI,9,0,0,56,c;Adam Trautman,DEN,9,0,0,55,c;Gavin Bartholomew,MIN,8,0,0,54,c;Eli Stowers,PHI,3,0,0,53,c;Nate Adkins,DEN,9,0,6,44,rc;Drew Sample,CIN,8,0,0,48,c;Jeremy Ruckert,NYJ,9,0,0,48,c;Blake Whiteheart,CLE,9,0,0,48,c;Ben Sinnott,WAS,9,0,0,48,c;Josh Oliver,MIN,3,0,0,46,c;Jelani Woods,NYJ,9,0,0,39,c;Ben Yurosek,MIN,4,0,0,34,c;Tanner Hudson,CIN,4,0,0,33,c;Luke Farrell,SF,8,0,0,33,c;Mo Alie-Cox,IND,9,0,0,31,c;Brock Wright,DET,8,0,0,31,c;Luke Schoonmaker,DAL,7,0,0,30,c;Will Kacmarek,MIA,8,0,0,30,c;Thomas Fidone II,NYG,3,0,0,29,c;Mark Redman,GB,9,0,0,29,c;John Bates,WAS,9,0,0,27,c;Charlie Woerner,ATL,9,0,3,23,rc;Keleki Latu,BUF,8,0,0,25,c;Teagan Quitoriano,ARI,5,0,0,23,c;Tanner Koziol,JAX,6,0,0,23,c;Zach Ertz,PHI,3,0,0,22,c;Cade Stover,HOU,7,0,5,17,rc;Colson Yankoff,WAS,8,0,0,22,c;Bauer Sharp,TB,9,0,0,21,c;Eric Saubert,SEA,9,0,0,20,c;Will Mallory,IND,3,0,0,20,c;Oscar Delp,NO,7,0,0,20,c;Jake Briningstool,KC,8,0,0,18,c;Elijah Arroyo,SEA,6,0,0,17,c;Johnny Mundt,PHI,9,0,0,16,c;Andrew Ogletree,IND,9,0,0,16,c;Marlin Klein,HOU,4,0,0,16,c;Hunter Long,ARI,4,0,0,15,c;Jackson Hawes,BUF,8,0,0,15,c;Brevin Jordan,HOU,5,0,0,12,c;Tyler Conklin,DET,6,0,0,11,c;Jackson Meeks,DET,4,0,0,8,c;Pharaoh Brown,IND,2,0,0,7,c;Quintin Morris,JAX,8,0,0,7,c;Hayden Rucci,LAC,6,0,0,7,c;Payne Durham,TB,9,0,0,5,c;Jack Endries,CIN,5,0,0,5,c;Durham Smythe,BAL,4,0,0,4,c;Robert Tonyan,PIT,8,0,0,2,c;Nick Muse,ATL,9,0,0,2,c"
+};
+const SCORING={
+  ppr:{label:"FULL PPR",word:"PPR",sub:"1 point per catch"},
+  half:{label:"HALF PPR",word:"half-PPR",sub:"0.5 per catch"},
+  std:{label:"STANDARD",word:"standard-scoring",sub:"no points per catch"},
+  pass:{label:"PASSING YDS",word:"passing yards",who:"QBs"},
+  rush:{label:"RUSHING YDS",word:"rushing yards",who:"RBs and QBs"},
+  rec:{label:"RECEIVING YDS",word:"receiving yards",who:"RBs, WRs and TEs"},
+  all:{label:"ALL YARDS",word:"total yards",who:"QBs, RBs, WRs and TEs"}
+};
+let scoring="ppr";
+// Rookies Only filter (free play and Multiplayer; the Daily always uses the full pool)
+let rookie=false;
+// the four Yards options; the rest are fantasy points per game
+const isRec=()=>scoring==="pass"||scoring==="rush"||scoring==="rec"||scoring==="all";
+// Rookies Only applies everywhere except Passing (too few rookie quarterbacks have played)
+const rk=()=>rookie&&scoring!=="pass";
+// what the number means, in prompts and results
+const unitLong=()=>isRec()?SCORING[scoring].word:SCORING[scoring].word+" points";
+const unitShort=()=>isRec()?"yards":"points";
+// 2026 rookies in the pool: this year's draft class plus undrafted rookies with a stat.
+// Checked against the Pro Football Hall of Fame draft results and nflverse's rookie-season field.
+const ROOKIES=new Set(["Fernando Mendoza","Athan Kaliakmanis","Jalon Daniels",
+  "Jeremiyah Love","Jadarian Price","Jonah Coleman","Kaelon Black","Kaytron Allen","Jaydn Ott","CJ Donaldson",
+  "Demond Claiborne","Emmett Johnson","Mike Washington Jr.","Seth McGowan","Nicholas Singleton",
+  "Carnell Tate","Jordyn Tyson","Makai Lemon","KC Concepcion","Denzel Boston","Omar Cooper Jr.","Antonio Williams",
+  "Germie Bernard","Zachariah Branch","Chris Bell","Ja'Kobi Lane","Elijah Sarratt","Malachi Fields","Deion Burks",
+  "Kevin Coleman Jr.","Josh Cameron","Zavion Thomas","Barion Brown","Caleb Douglas","Malik Benson","Cyrus Allen",
+  "Bryce Lance","Reggie Virgil","Colbie Young",
+  "Kenyon Sadiq","Eli Stowers","Oscar Delp","Eli Raridon","Will Kacmarek","Josh Cuevas","Matthew Hibner","Marlin Klein",
+  "Bauer Sharp","Sam Roush","Nate Boerkircher","Tanner Koziol","Jack Endries",
+  // also confirmed 2026 rookies (nflverse rookie season + team/draft reports)
+  "Ted Hurst III","Brenen Thompson","J. Michael Sturdivant","Jaden Bradley","Gregory Desrosiers","DJ Herman",
+  // undrafted 2026 rookies who only show up in the Yards pools (passing / rushing)
+  "Jack Strand","Joe Fagnano","Robert Henry Jr."]);
+const ALL={};   // every player whatever the filter, so a veteran named in rookie mode gets a clear note
+// POOL[pos] = every player [name, team, points per game, games]; TARGETS[pos] = the ones a play can ask about
+const POOL={}, TARGETS={};
+const TARGET_DEPTH={QB:32,RB:48,WR:64,TE:28}, TARGET_MIN_GAMES=4;
+// Yards options: which positions take part, which stat flag a player needs (p pass, r carry, c catch), how deep targets go
+const YDS_POS={pass:["QB"],rush:["RB","QB"],rec:["RB","WR","TE"],all:["QB","RB","WR","TE"]};
+const YDS_FLAG={pass:"p",rush:"r",rec:"c",all:""};
+const YDS_DEPTH={pass:{QB:32},rush:{RB:40,QB:20},rec:{RB:36,WR:72,TE:32},all:{QB:32,RB:40,WR:72,TE:32}};
+const ydsOf=(m,py,ry,cy)=>m==="pass"?py:m==="rush"?ry:m==="rec"?cy:py+ry+cy;
+const EVERY={};   // everyone with a yards stat, whatever the option, so "not in this option" gets a clear note
+// the source rounds from unrounded totals; these five averages land 0.1 away otherwise
+const PG_FIX={"Patrick Mahomes":{ppr:17.7,half:17.7,std:17.7},"Charlie Kolar":{half:3.0},
+  "Sam Roush":{half:1.4},"Jalen Brooks":{std:1.4}};
+function buildPool(){
+  if(isRec()){
+    // yards a game for this option: passing, rushing, receiving, or all three added up
+    const m=scoring, flag=YDS_FLAG[m];
+    for(const pos of ["QB","RB","WR","TE"]){
+      const rows=RAW_YDS[pos]?RAW_YDS[pos].split(";").map(r=>r.split(",")):[];
+      EVERY[pos]=rows.map(([n,t,g])=>[n,t,0,+g]);
+      ALL[pos]=YDS_POS[m].includes(pos)
+        ? rows.filter(r=>!flag||r[6].includes(flag)).map(([n,t,g,py,ry,cy])=>[n,t,Math.round(ydsOf(m,+py,+ry,+cy)/+g*10)/10,+g]) : [];
+      POOL[pos]=rk() ? ALL[pos].filter(p=>ROOKIES.has(p[0])) : ALL[pos];
+      TARGETS[pos]=rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=10)
+        : POOL[pos].filter(p=>p[3]>=TARGET_MIN_GAMES).sort((a,b)=>b[2]-a[2]).slice(0,YDS_DEPTH[m][pos]||0);
+    }
+    return;
+  }
+  for(const pos in RAW){
+    ALL[pos]=RAW[pos].split(";").map(r=>{
+      const [n,t,g,ppr,std]=r.split(",");
+      const tot = scoring==="ppr" ? +ppr : scoring==="std" ? +std : (+ppr + +std)/2;
+      const fix=PG_FIX[n]&&PG_FIX[n][scoring];
+      return [n,t,fix!==undefined?fix:Math.round(tot/+g*10)/10,+g];
+    });
+    POOL[pos]=rk() ? ALL[pos].filter(p=>ROOKIES.has(p[0])) : ALL[pos];
+    // targets come from regulars, so a play never asks for a one-game cameo's average
+    // rookie targets: rookies who have played a few games and score enough to be worth naming
+    TARGETS[pos]=rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=3)
+      : POOL[pos].filter(p=>p[3]>=TARGET_MIN_GAMES).sort((a,b)=>b[2]-a[2]).slice(0,TARGET_DEPTH[pos]);
+  }
+}
+buildPool();
+
+
+const EXTRAS=["broke a tackle","stiff-arm","spun out of it","extra effort","second wind","dragged the pile"];
+
+// Yards are graded on rank, not raw distance. Every player who fits the slot (and hasn't been used
+// this drive) is ranked by how close his average is to the target, and p is the share of them closer
+// than your answer:
+//   closest possible answer (p = 0)   -> +35
+//   top 40% (p < 0.4)                 -> 35 * (1 - p/0.4)^5, never a loss
+//   0.4 <= p < 0.75                   -> slides from 0 down to -10
+//   bottom 25% (p >= 0.75)            -> -10
+const SAFE=0.4, CURVE_K=5;
+function gainFor(pick){
+  const pool=allowed.flatMap(pos=>POOL[pos]).filter(x=>!used.has(x[0])||x[0]===pick[0]);
+  const d=Math.abs(pick[2]-target);
+  const closer=pool.filter(x=>Math.abs(x[2]-target)<d-1e-9).length;
+  const pct=closer/pool.length;
+  let g;
+  if(closer===0) g=35;
+  else if(pct>=0.75) g=-10;
+  else if(pct<SAFE) g=Math.round(35*Math.pow(1-pct/SAFE,CURVE_K));
+  else g=Math.round(-10*(pct-SAFE)/(0.75-SAFE));
+  return {g:g||0,pct,rank:closer+1,of:pool.length,best:closer===0};
+}
+function tierFor(g,best,bottom){
+  if(best) return ["HOUSE CALL","Closest possible answer."];
+  if(g>=20) return ["BIG PLAY","Near the top of the board."];
+  if(g>=10) return ["FIRST DOWN","Moves the chains."];
+  if(g>=1)  return ["SHORT GAIN","Positive yards."];
+  if(g===0) return ["NO GAIN","Stopped at the line."];
+  if(!bottom) return ["TACKLE FOR LOSS","Dropped in the backfield."];
+  return ["SACKED","Bottom quarter of the answers."];
+}
+const ord=n=>n+((n%100>=11&&n%100<=13)?"th":({1:"st",2:"nd",3:"rd"}[n%10]||"th"));
+// lineup slots: which positions satisfy each one
+const SLOTS={
+  QB:["QB"], RB:["RB"], WR:["WR"], TE:["TE"],
+  FLEX:["RB","WR","TE"],
+  SUPERFLEX:["QB","RB","WR","TE"]
+};
+const SLOT_HINT={
+  FLEX:"any RB, WR or TE",
+  SUPERFLEX:"any player, QB included"
+};
+// hint under the prompt: who fits the slot, and in All Yards what gets added up
+function slotHint(s){
+  const who = scoring==="rush"&&s==="SUPERFLEX" ? "any RB or QB" : SLOT_HINT[s];
+  if(scoring==="all") return (who?who+" · ":"")+"passing + rushing + receiving yards";
+  return who;
+}
+const PLAYS=7, GOAL=100;
+// clock is seconds per play; 0 means untimed
+const MODES={standard:{clock:25},speed:{clock:5},learning:{clock:0}};
+let mode="standard";
+const clockSecs=()=>MODES[mode].clock;
+
+const norm=s=>s.toLowerCase().replace(/[.''`-]/g,"")
+  .replace(/\b(jr|sr|ii|iii|iv)\b/g,"").replace(/\s+/g," ").trim();
+
+let yards, play, used, target, slot, allowed, slate, timer, left, over;
+let live=false, paused=false, acList=[], acSel=-1, playT0=0;
+let pnp=null;          // Multiplayer (pass-the-device) match in progress
+const $=id=>document.getElementById(id);
+
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+// every drive: one of each position, one FLEX, one SUPERFLEX, one wildcard.
+// Yards options deal only slots their players fit: Passing is all QBs; Rushing is RBs plus QBs (SUPERFLEX = RB or QB);
+// Receiving is RBs, WRs and TEs; All Yards has no SUPERFLEX, since a QB's passing yards dwarf everyone else's.
+// Rookies Only skips the QB-only slot: too few rookie quarterbacks have played.
+function makeSlate(){
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  if(scoring==="pass") return Array(7).fill("QB");
+  if(scoring==="rush") return shuffle(rk() ? ["RB","RB","RB","RB","RB","SUPERFLEX","SUPERFLEX"]
+    : ["RB","RB","RB","QB","SUPERFLEX","SUPERFLEX",pick(["RB","QB","SUPERFLEX"])]);
+  if(scoring==="rec") return shuffle(["WR","WR","TE","RB","FLEX","FLEX",pick(["WR","TE","FLEX"])]);
+  if(scoring==="all") return shuffle(rk() ? ["RB","RB","WR","WR","TE","FLEX","FLEX"]
+    : ["QB","RB","WR","TE","FLEX","FLEX",pick(["QB","RB","WR","TE"])]);
+  if(rk()) return shuffle(["RB","WR","TE","FLEX","SUPERFLEX","WR","FLEX"]);
+  const names=Object.keys(SLOTS);
+  return shuffle(["QB","RB","WR","TE","FLEX","SUPERFLEX",names[Math.floor(Math.random()*names.length)]]);
+}
+function start(){
+  if(!dailyDone()) return intro(true);
+  endDaily();
+  pnp=null;paintPnpBar();
+  yards=0;play=0;used=new Set();over=false;
+  slate=makeSlate();
+  $("log").innerHTML="";
+  nextPlay();
+}
+
+// On phones, keep the field and the prompt in view when a play starts, so the keyboard doesn't hide them.
+function bringPlayIntoView(){
+  if(innerWidth>700&&innerHeight>600) return;
+  const y=$("field").getBoundingClientRect().top+scrollY-10;
+  if(Math.abs(scrollY-y)>4) scrollTo({top:Math.max(0,y),behavior:"smooth"});
+}
+function nextPlay(){
+  if(yards>=GOAL) return finish(true);
+  if(play>=PLAYS)  return finish(false);
+  document.body.classList.add("indrive");
+  paintSimple();
+  play++;
+  slot=slate[play-1];
+  allowed=SLOTS[slot];
+  if(daily){
+    target=daily.plan[play-1].target;
+    dstate.shown=play;saveDaily();
+  }else{
+    const cands=allowed.flatMap(p=>TARGETS[p]).filter(p=>!used.has(p[0]));
+    if(!cands.length) return finish(yards>=GOAL);
+    target=cands[Math.floor(Math.random()*cands.length)][2];
+  }
+  paintBoard();
+  const pill=`<span class="pos-pill ${allowed.length>1?(slot==="FLEX"?"flex":"sflex"):""}">${slot}</span>`;
+  $("panel").innerHTML=`
+    <div class="plabel">${daily?`DAILY DRIVE #${daily.no}${practice?(daily.date===todayET()?" REPLAY (DOESN'T COUNT)":" · REPLAY (DOESN'T COUNT)"):""} · `
+      :pnp?`MULTIPLAYER · ${esc(pnp.p[pnp.cur].name)} · `
+      :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${rk()?" · ROOKIES":""} · </span>`}PLAY ${play} OF ${PLAYS}</div>
+    <div class="prompt">Name a ${pill} averaging closest to
+      <b>${target.toFixed(1)}</b> ${unitLong()} per game this season.</div>
+    ${slotHint(slot)?`<div class="hint">${slotHint(slot)}</div>`:""}
+    <div class="entry">
+      <div class="acwrap">
+        <input type="text" id="ans" placeholder="start typing a player…" autocomplete="off" spellcheck="false">
+        <div class="ac" id="ac"></div>
+      </div>
+      <button id="snap">SNAP</button>
+    </div>
+    <div class="note" id="note"></div>
+    ${clockSecs()
+      ? `<div class="clock"><span id="ct">${clockSecs()}</span>s
+      <span class="bar"><i id="cbar" style="width:100%"></i></span>
+      <button class="ghost pausebtn" id="pause">❚❚ PAUSE</button>
+      ${daily&&!practice?"":`<button class="ghost pausebtn" id="restart">↺ RESTART</button>`}</div>`
+      : `<div class="clock"><span style="flex:1">NO CLOCK · LEARNING MODE · averages are in the player pool</span>
+      <button class="ghost pausebtn" id="restart">↺ RESTART</button></div>`}`;
+  $("snap").onclick=()=>submit();
+  if($("pause")) $("pause").onclick=pause;
+  if($("restart")) $("restart").onclick=restart;
+  playT0=performance.now();
+  wireInput();
+  $("ans").focus({preventScroll:true});
+  bringPlayIntoView();
+  live=true;paused=false;
+  runClock();
+  drawPool();
+}
+
+/* ---------- daily drive: the same seven plays for everyone, one try, Standard mode + Full PPR ---------- */
+const DAILY_EPOCH="2026-11-13";   // Daily #1
+const DAILY_KEY="hm-daily-v2";
+// On its own site (pylondaily.com, or a Cloudflare *.pages.dev preview) the game switches on the hosted extras:
+// the address in shared results, the daily stats refresh (data.json) and the "you beat X%" counter (/api/daily).
+const HOSTED=/(^|\.)pylondaily\.com$|\.pages\.dev$/.test(location.hostname);
+const SHARE_URL=/(^|\.)pylondaily\.com$/.test(location.hostname)?"https://pylondaily.com":"";
+let daily=null;                   // today's plan while a daily drive is on screen
+let dstate=null;                  // saved progress for today's daily
+let prefs=null;                   // the player's own mode and scoring, put back afterwards
+// The daily turns over at 5 a.m. Eastern: before 5 a.m. it is still the previous day's drive.
+const DAILY_HOUR=5;
+function etParts(){
+  const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const g=t=>+p.find(x=>x.type===t).value;
+  return {y:g("year"),mo:g("month"),d:g("day"),h:g("hour"),mi:g("minute")};
+}
+function todayET(){
+  try{
+    const t=etParts();
+    const day=new Date(Date.UTC(t.y,t.mo-1,t.d-(t.h<DAILY_HOUR?1:0)));
+    return day.toISOString().slice(0,10);
+  }catch(e){return new Date(Date.now()-DAILY_HOUR*36e5).toISOString().slice(0,10);}
+}
+const dailyNo=d=>Math.round((Date.parse(d+"T00:00:00Z")-Date.parse(DAILY_EPOCH+"T00:00:00Z"))/864e5)+1;
+function nextDailyIn(){
+  try{
+    const t=etParts(), now=t.h*60+t.mi, at=DAILY_HOUR*60;
+    const mins=now<at ? at-now : 1440-now+at;
+    return Math.floor(mins/60)+"h "+(mins%60)+"m";
+  }catch(e){return "";}
+}
+// small seeded generator, so one date always deals the same drive
+function seeded(str){
+  let h=1779033703^str.length;
+  for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}
+  let a=(h^=h>>>16)>>>0;
+  return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+}
+// Daily targets are random numbers drawn from fixed ranges, not copied from any player, and they
+// don't depend on the player data, so every device deals the same drive even after the numbers update.
+const DAILY_RANGE={QB:[12,24],RB:[8,22],WR:[8,22],TE:[6,17],FLEX:[8,22],SUPERFLEX:[8,24]};
+function dailyPlan(date){
+  const r=seeded("hash-marks|v3|"+date);
+  const names=Object.keys(SLOTS);
+  const sl=["QB","RB","WR","TE","FLEX","SUPERFLEX",names[Math.floor(r()*names.length)]];
+  for(let i=sl.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[sl[i],sl[j]]=[sl[j],sl[i]];}
+  return sl.map(s=>{
+    const [lo,hi]=DAILY_RANGE[s];
+    const target=Math.round((lo+Math.pow(r(),2)*(hi-lo))*10)/10;
+    // the bonus-yard roll is fixed per play too, so equal answers always earn equal yards
+    return {slot:s,target,yac:r()<0.25?1+Math.floor(r()*2):0,ex:Math.floor(r()*EXTRAS.length)};
+  });
+}
+// free play unlocks once today's Daily Drive is finished
+function dailyDone(){const d=loadDaily();return !!(d&&d.done);}
+// settings bars appear only once today's Daily is finished, and stay out of the way during a Daily drive
+function paintSimple(){
+  document.body.classList.toggle("simple",!dailyDone()||!!(daily&&!over));
+  // Home works everywhere except inside the official Daily, which has to be finished
+  const h=$("homeBtn"); if(h) h.hidden=inOfficialDaily();
+}
+const inOfficialDaily=()=>!!(daily&&!practice&&!over);
+function loadDaily(){
+  try{const d=JSON.parse(localStorage.getItem(DAILY_KEY)||"null");if(d&&d.date===todayET()&&Array.isArray(d.plays)) return d;}catch(e){}
+  return null;
+}
+function saveDaily(){if(practice) return;try{localStorage.setItem(DAILY_KEY,JSON.stringify(dstate));}catch(e){}}
+// A replay of today's Daily Drive: same seven plays and rules, but nothing is saved, shared or counted.
+let practice=false;
+// the Daily's fixed rules: Standard clock, Full PPR, full player pool. The player's own settings come back after.
+function enterDailyRules(){
+  prefs={mode,scoring,rookie};
+  const rebuild=scoring!=="ppr"||rookie;
+  mode="standard";scoring="ppr";rookie=false;
+  if(rebuild) buildPool();
+  paintMode();paintScoring();paintExtras();
+}
+function redoDaily(){
+  if(!dailyDone()) return startDaily();
+  replayDaily(todayET());
+}
+const addDays=(d,n)=>new Date(Date.parse(d+"T00:00:00Z")+n*864e5).toISOString().slice(0,10);
+const yesterdayET=()=>addDays(todayET(),-1);
+// A replay of a Daily Drive (today's or yesterday's): same seven plays and rules, but nothing is saved, shared or counted.
+function replayDaily(date){
+  endDaily();
+  pnp=null;paintPnpBar();
+  enterDailyRules();
+  practice=true;
+  daily={date,no:dailyNo(date),plan:dailyPlan(date)};
+  dstate={date,plays:[],shown:0,done:false};
+  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  $("log").innerHTML="";
+  slate=daily.plan.map(p=>p.slot);
+  nextPlay();
+}
+function endDaily(){
+  if(!daily) return;
+  daily=null;dstate=null;practice=false;
+  if(prefs){
+    const rebuild=prefs.scoring!==scoring||prefs.rookie!==rookie;
+    mode=prefs.mode;scoring=prefs.scoring;rookie=prefs.rookie;
+    if(rebuild) buildPool();
+    prefs=null;paintMode();paintScoring();paintExtras();
+  }
+}
+function startDaily(){
+  endDaily();
+  pnp=null;paintPnpBar();
+  const date=todayET();
+  enterDailyRules();
+  daily={date,no:dailyNo(date),plan:dailyPlan(date)};
+  dstate=loadDaily()||{date,plays:[],shown:0,done:false};
+  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  $("log").innerHTML="";
+  slate=daily.plan.map(p=>p.slot);
+  // a play left on screen when the page was closed counts as no answer
+  if(!dstate.done&&dstate.shown>dstate.plays.length&&dstate.plays.length<PLAYS){
+    const pl=daily.plan[dstate.plays.length];
+    dstate.plays.push({slot:pl.slot,target:pl.target,name:null,avg:null,diff:null,pct:null,best:false,gain:-10,tier:"DELAY OF GAME"});
+  }
+  for(const r of dstate.plays){
+    play++;yards=Math.max(0,Math.min(GOAL,yards+r.gain));
+    if(r.name) used.add(r.name);
+    logLine(play,r.slot,r.name,r.avg,r.target,r.tier,r.gain);
+  }
+  saveDaily();
+  if(dstate.done) return finish(yards>=GOAL,true);
+  nextPlay();
+}
+function dailyEmoji(){
+  return dstate.plays.map(r=>r.name===null?"⬛":r.best?"🟪":r.gain>=20?"🟩":r.gain>=10?"🟨":r.gain>0?"🟧":"🟥").join("");
+}
+function shareText(){
+  const n=dstate.plays.length, td=yards>=GOAL;
+  return `🏈 Pylon Daily #${daily.no}\n`+
+    (td?`TOUCHDOWN in ${n} play${n>1?"s":""}`:`${yards} yards in ${n} plays`)+
+    `\n${dailyEmoji()}`+(SHARE_URL?`\n${SHARE_URL}`:"");
+}
+async function shareDaily(){
+  const text=shareText(), msg=$("shareMsg");
+  try{
+    if(navigator.share&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){await navigator.share({text});return;}
+  }catch(e){if(e&&e.name==="AbortError") return;}
+  try{await navigator.clipboard.writeText(text);msg.textContent="Copied. Paste it anywhere.";return;}catch(e){}
+  // clipboard not available here: show the text so it can be copied by hand
+  const box=$("shareBox");box.hidden=false;box.value=text;box.focus();box.select();
+  msg.textContent="Select the text below and copy it.";
+}
+function logLine(n,slotName,name,avg,tgt,tier,gain){
+  const line=name?`${esc(name)} (${avg.toFixed(1)}) vs ${tgt.toFixed(1)}`:`no answer · needed ${tgt.toFixed(1)}`;
+  const who=pnp?`<b style="color:var(--gold)">${esc(pnp.p[pnp.cur].name)}</b> `:"";
+  $("log").innerHTML+=`<div>${who}${n}. <b style="color:var(--dim)">${slotName}</b> <span>${line}</span> — ${tier}, ${gain} yds</div>`;
+}
+
+/* ---------- weekly refresh hook ----------
+   Host a JSON file shaped {"note":"…","QB":"…","RB":"…","WR":"…","TE":"…"} (same row format as RAW)
+   and put its address in DATA_URL; the game then loads the newest numbers on every visit. */
+const DATA_URL=HOSTED?"data.json":"";   // rebuilt every morning by tools/build_data.py (GitHub Actions)
+let DATA_NOTE="2026 NFL season through Week 10 (as of Nov 13, 2026)";
+function paintFooter(){
+  const n=["QB","RB","WR","TE"].reduce((s,k)=>s+RAW[k].split(";").length,0);
+  $("dataNote").textContent="Fantasy points and yards per game, "+DATA_NOTE;
+  $("dataCount").textContent="All "+n+" quarterbacks, running backs, receivers and tight ends with a stat this season";
+}
+async function refreshData(){
+  if(!DATA_URL) return;
+  try{
+    const r=await fetch(DATA_URL,{cache:"no-store"});
+    if(!r.ok) return;
+    const d=await r.json();
+    if(!["QB","RB","WR","TE"].every(k=>typeof d[k]==="string"&&d[k].split(";").length>10)) return;
+    // a drive already under way keeps the numbers it started with; the new ones load at the next start screen
+    if(live||play>0&&!over){pendingData=d;return;}
+    applyData(d);
+    if(play===0&&!live&&!daily) intro();
+  }catch(e){}
+}
+let pendingData=null;
+function applyData(d){
+  for(const k of ["QB","RB","WR","TE"]) RAW[k]=d[k];
+  if(d.YDS&&typeof d.YDS==="object") for(const k of ["QB","RB","WR","TE"]) if(typeof d.YDS[k]==="string") RAW_YDS[k]=d.YDS[k];
+  for(const k in PG_FIX) delete PG_FIX[k];
+  if(Array.isArray(d.rookies)&&d.rookies.length){ROOKIES.clear();d.rookies.forEach(n=>ROOKIES.add(String(n)));}
+  if(d.note) DATA_NOTE=String(d.note);
+  buildPool();paintFooter();
+}
+
+/* ---------- suggestions, emailed to the site owner through Web3Forms ----------
+   Get a free access key at web3forms.com (it is emailed to you) and paste it below.
+   The key is safe to publish: it only routes messages to your inbox and never reveals your address. */
+const SUGGEST_KEY="67110e91-b2e0-4bf5-8341-77b71321a60d";   // Web3Forms access key (public by design: it only routes to the owner's inbox)
+const SUGGEST_GAP=60;   // seconds between sends from one browser
+function paintSuggest(){
+  const ok=!!SUGGEST_KEY;
+  $("sgSend").disabled=!ok;
+  $("sgOff").hidden=ok;
+}
+let sgBusy=false;
+async function sendSuggestion(e){
+  if(e) e.preventDefault();
+  if(sgBusy) return;
+  const msg=$("sgMsg").value.trim(), out=$("sgStatus");
+  out.className="sgstatus";
+  if(!SUGGEST_KEY){out.textContent="Suggestions aren't connected yet.";return;}
+  if($("sgBot").checked) return;                         // filled in by a bot, drop quietly
+  if(msg.length<5){out.className="sgstatus bad";out.textContent="Write a little more first.";return;}
+  let last=0; try{last=+localStorage.getItem("hm-sg-last")||0;}catch(err){}
+  const wait=Math.ceil(SUGGEST_GAP-(Date.now()-last)/1000);
+  if(wait>0){out.className="sgstatus bad";out.textContent=`Thanks! You can send another in ${wait}s.`;return;}
+  const reply=$("sgEmail").value.trim();
+  if(reply&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reply)){out.className="sgstatus bad";out.textContent="That reply email doesn't look right (or leave it blank).";return;}
+  const kind=$("sgKind").value;
+  const body={
+    access_key:SUGGEST_KEY,
+    subject:`Pylon Daily suggestion: ${kind}`,
+    from_name:$("sgName").value.trim()||"Pylon Daily player",
+    type:kind,
+    message:msg,
+    game_settings:`${daily?"daily drive":mode} · ${SCORING[scoring].label} · ${theme()} theme`,
+    botcheck:false
+  };
+  if(reply){body.email=reply;body.replyto=reply;}
+  sgBusy=true;$("sgSend").disabled=true;out.textContent="Sending…";
+  try{
+    const r=await fetch("https://api.web3forms.com/submit",{method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok&&d.success){
+      try{localStorage.setItem("hm-sg-last",String(Date.now()));}catch(err){}
+      $("sgForm").reset();
+      out.className="sgstatus good";out.textContent="Sent. Thanks for the idea!";
+    }else{
+      out.className="sgstatus bad";out.textContent="Couldn't send that"+(d.message?`: ${d.message}`:"")+". Try again in a bit.";
+    }
+  }catch(err){
+    out.className="sgstatus bad";out.textContent="Couldn't reach the server. Check your connection and try again.";
+  }finally{sgBusy=false;$("sgSend").disabled=!SUGGEST_KEY;}
+}
+// the button sends on its own click (some embedded pages block form "submit" events);
+// the form's submit is still caught so nothing ever reloads the page
+$("sgSend").addEventListener("click",sendSuggestion);
+$("sgForm").addEventListener("submit",sendSuggestion);
+$("sgMsg").addEventListener("input",()=>{$("sgCount").textContent=$("sgMsg").value.length+" / 2000";});
+$("sgLink").addEventListener("click",e=>{
+  e.preventDefault();$("suggest").open=true;
+  $("suggest").scrollIntoView({behavior:"smooth",block:"start"});
+  setTimeout(()=>$("sgMsg").focus(),350);
+});
+
+/* ---------- first-visit tutorial ---------- */
+const TUT_KEY="hm-tutorial-v1";
+let tutStep=0;
+const TUT=[
+  {t:"WELCOME TO PYLON DAILY",b:`<p>A fantasy football guessing game. You have <b>7 plays</b> to drive the ball <b>100 yards</b> for a touchdown.</p>
+     <div class="tfield"><i class="tball">🏈</i><span class="tez">END ZONE</span></div>`},
+  {t:"EACH PLAY ASKS FOR A NUMBER",b:`<p>You get a lineup slot and a points-per-game number. Name the player whose season average is <b>closest</b> to it.</p>
+     <div class="tcard"><small>PLAY 3 OF 7</small>Name a <span class="pos-pill">WR</span> averaging closest to <b>15.6</b> PPR points per game this season.</div>
+     <p class="tsmall"><b>FLEX</b> means any RB, WR or TE. <b>SUPERFLEX</b> means anyone, quarterbacks included.</p>`},
+  {t:"CLOSER MEANS MORE YARDS",b:`<p>Your answer is ranked against every player who fits the slot. The closer you are compared with everyone else, the bigger the gain. Answers in the <b>top 40% never lose yards</b>; bad ones do.</p>
+     <div class="ttable">
+       <div><span>Closest possible answer</span><b>+35 yds</b></div>
+       <div><span>Near the top of the list</span><b>big gains</b></div>
+       <div><span>Top 40%</span><b>a few yards, never a loss</b></div>
+       <div><span>Middle of the pack</span><b>small losses</b></div>
+       <div><span>Bottom 25%, or no answer</span><b style="color:var(--hot)">−10</b></div>
+     </div>`},
+  {t:"TYPE FAST",b:`<p>You get <b>25 seconds</b> a play. Start typing a name, then pick from the list. <b>Enter</b> takes the top match, and small typos are forgiven.</p>
+     <div class="tcard"><span class="tinput">jaxon smi<span class="tcaret"></span></span><span class="tdrop">Jaxon Smith-Njigba <small>WR · SEA</small></span></div>`},
+  {t:"THE BUTTONS UP TOP",b:`<p>Everything you need is in the corners of the screen.</p>
+     <div class="tkeys">
+       <div><span class="key">🏠</span><span><b>Home:</b> back to the start screen from any game (not during the Daily).</span></div>
+       <div><span class="key">👤</span><span><b>Profile:</b> sign in with a name to keep your stats on this device.</span></div>
+       <div><span class="key">📊</span><span><b>Stats:</b> your Daily streak and how each Daily went.</span></div>
+       <div><span class="key">?</span><span><b>How to play:</b> opens this guide again any time.</span></div>
+       <div><span class="key"><i class="sw" style="background:#1f6b33"></i></span><span><b>Field color:</b> green, blue or red turf.</span></div>
+       <div><span class="key">☾</span><span><b>Theme:</b> dark, light or Christmas. The same menu turns <b>sound</b> on or off (and string lights in Christmas).</span></div>
+     </div>`},
+  {t:"ONE DAILY DRIVE",b:`<p>Every day at 5 a.m. Eastern there's one <b>Daily Drive</b>: the same seven plays for everyone, Full PPR scoring, 25 seconds a play, one try.</p>
+     <p>Finish it, then <b>share your result</b> and see how your friends did.</p>`},
+  {t:"AFTER THE DAILY",b:`<p>Finishing the Daily unlocks <b>unlimited free play</b>, plus settings above the field:</p>
+     <div class="tkeys">
+       <div><span class="key">MODE</span><span><b>Standard</b> (25 s a play), <b>Speed</b> (5 s) or <b>Learning</b> (no clock, averages shown in the player pool).</span></div>
+       <div><span class="key">FANTASY</span><span>Fantasy points per game: <b>Full PPR</b>, <b>Half PPR</b> or <b>Standard</b>.</span></div>
+       <div><span class="key">YARDS</span><span>Yards per game instead: <b>Passing</b>, <b>Rushing</b>, <b>Receiving</b>, or <b>All</b> (all three added up).</span></div>
+       <div><span class="key">☑</span><span><b>Rookies only:</b> just this year's rookie class.</span></div>
+       <div><span class="key">👥</span><span><b>Multiplayer:</b> two players on one phone, taking turns.</span></div>
+       <div><span class="key">↺</span><span><b>Redo the Daily</b> or play <b>yesterday's</b>, just for fun; they don't count.</span></div>
+     </div>
+     <p class="tsmall">At the bottom of the page: the player pool, and a box to send us ideas.</p>`}
+];
+function paintTut(){
+  const s=TUT[tutStep], last=tutStep===TUT.length-1;
+  $("tutCard").innerHTML=`
+    <button class="ghost x" id="tutSkip" aria-label="Close how to play">✕</button>
+    <div class="tstep">HOW TO PLAY · ${tutStep+1} / ${TUT.length}</div>
+    <h2>${s.t}</h2>
+    <div class="tbody">${s.b}</div>
+    <div class="tdots">${TUT.map((_,i)=>`<i class="${i===tutStep?"on":""}"></i>`).join("")}</div>
+    <div class="row" style="justify-content:space-between;margin-top:14px">
+      <button class="ghost small" id="tutBack" ${tutStep?"":"disabled"}>◂ BACK</button>
+      <button id="tutNext">${!last?"NEXT ▸":dailyDone()?"GOT IT":"START TODAY'S DRIVE ▸"}</button>
+    </div>`;
+  $("tutNext").focus();
+}
+function openTut(){
+  if(live&&!paused&&clockSecs()) pause();
+  tutStep=0;paintTut();$("tut").classList.add("open");
+}
+function closeTut(go){
+  $("tut").classList.remove("open");
+  try{localStorage.setItem(TUT_KEY,"1");}catch(e){}
+  if(go&&!live&&!(daily&&!over)&&!dailyDone()) startDaily();
+}
+$("tut").addEventListener("click",e=>{
+  const id=e.target.id;
+  if(id==="tutSkip"||id==="tut") return closeTut(false);
+  if(id==="tutBack"&&tutStep>0){tutStep--;return paintTut();}
+  if(id==="tutNext"){ if(tutStep<TUT.length-1){tutStep++;paintTut();} else closeTut(true); }
+});
+document.addEventListener("keydown",e=>{
+  if(!$("tut").classList.contains("open")) return;
+  if(e.key==="Escape") closeTut(false);
+  else if(e.key==="ArrowRight"&&tutStep<TUT.length-1){tutStep++;paintTut();}
+  else if(e.key==="ArrowLeft"&&tutStep>0){tutStep--;paintTut();}
+});
+$("helpBtn").onclick=openTut;
+function maybeTutorial(){
+  let seen=false; try{seen=localStorage.getItem(TUT_KEY)==="1";}catch(e){}
+  if(!seen) openTut();
+}
+
+/* ---------- restart: abandon this drive and deal a new one, any mode ---------- */
+function restart(){
+  clearInterval(timer);live=false;paused=false;
+  if(practice&&daily) return replayDaily(daily.date);
+  if(pnp) return pnpStart(pnp.p[0].name,pnp.p[1].name);
+  start();
+}
+
+/* ---------- profiles, stats and shared play data ----------
+   Everything here lives in this browser's storage. There is no server and no password:
+   a profile is a name on this device. TELEMETRY_URL is the one place to plug a server in. */
+const STORE_KEY="hm-save-v1";
+const TELEMETRY_URL="";      // empty = shared play data never leaves the device
+const MAX_PLAYS=2000;
+let save={current:null,profiles:{},share:false,plays:[]};
+let storageOK=true;
+const blankStats=()=>({drives:0,tds:0,best:0,fewest:0,plays:0,yards:0,answered:0,missSum:0,perfect:0,picks:{},modes:{}});
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function loadSave(){
+  try{
+    const r=JSON.parse(localStorage.getItem(STORE_KEY)||"null");
+    if(r&&typeof r==="object"){
+      if(r.profiles&&typeof r.profiles==="object") save.profiles=r.profiles;
+      if(typeof r.current==="string"&&save.profiles[r.current]) save.current=r.current;
+      save.share=!!r.share;
+      if(Array.isArray(r.plays)) save.plays=r.plays.slice(-MAX_PLAYS);
+    }
+  }catch(e){storageOK=false;}
+}
+function persist(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(save));storageOK=true;}catch(e){storageOK=false;}
+}
+const me=()=>(save.current&&save.profiles[save.current])||null;
+function signIn(raw){
+  const name=String(raw).replace(/\s+/g," ").trim().slice(0,20);
+  if(!name) return false;
+  const key="p:"+name.toLowerCase();
+  if(!save.profiles[key]) save.profiles[key]={name,created:Date.now(),stats:blankStats()};
+  save.current=key;persist();return true;
+}
+function secsUsed(){
+  return clockSecs() ? Math.max(0,clockSecs()-left) : Math.round((performance.now()-playT0)/1000);
+}
+function recordPlay(p,gain,diff,best){
+  if(practice||pnp) return;
+  const m=me();
+  if(m){
+    const s=m.stats;
+    s.plays++;s.yards+=gain;
+    if(p){
+      s.answered++;s.missSum+=diff;
+      s.picks[p[0]]=(s.picks[p[0]]||0)+1;
+      if(best) s.perfect++;
+    }
+  }
+  if(save.share){
+    // no profile name in here: just what was asked and what was answered
+    save.plays.push({v:1,day:new Date().toISOString().slice(0,10),mode:daily?"daily":mode,scoring,slot,target,
+      pick:p?p[0]:null,miss:p?+diff.toFixed(1):null,yards:gain,secs:secsUsed(),play});
+    if(save.plays.length>MAX_PLAYS) save.plays.splice(0,save.plays.length-MAX_PLAYS);
+  }
+  if(m||save.share) persist();
+}
+function recordDrive(scored){
+  if(practice||pnp) return;
+  const m=me();
+  if(m){
+    const s=m.stats;
+    s.drives++;
+    if(scored){s.tds++;if(!s.fewest||play<s.fewest) s.fewest=play;}
+    if(yards>s.best) s.best=yards;
+    const mk=daily?"daily":mode;
+    const md=s.modes[mk]||(s.modes[mk]={drives:0,tds:0});
+    md.drives++;if(scored) md.tds++;
+    persist();
+  }
+  if(TELEMETRY_URL&&save.share&&save.plays.length){
+    try{
+      if(navigator.sendBeacon(TELEMETRY_URL,JSON.stringify(save.plays))){save.plays=[];persist();}
+    }catch(e){}
+  }
+}
+
+function paintAcct(){
+  const m=me();
+  $("acctBtn").innerHTML = "👤 <span class=\"lbl\">"+(m?esc(m.name):"SIGN IN")+"</span>";
+  let h=`<button class="ghost x" id="acctX" aria-label="Close">✕</button>`;
+  if(!m){
+    const others=Object.values(save.profiles);
+    h+=`<h2>SIGN IN</h2>
+      <p>Pick a name to keep your record and stats between visits. Profiles are saved
+        <b>on this device only</b>. There is no password and nothing is sent anywhere,
+        so anyone using this browser can open a profile.</p>
+      <div class="row">
+        <input type="text" id="acctName" maxlength="20" placeholder="your name" autocomplete="off" spellcheck="false">
+        <button id="acctGo">SIGN IN</button>
+      </div>
+      <div class="note" id="acctNote"></div>`;
+    if(others.length) h+=`<h3>PROFILES ON THIS DEVICE</h3><div class="row" style="margin-top:0">`+
+      others.map(o=>`<button class="ghost small" data-p="${esc(o.name)}">${esc(o.name)}</button>`).join("")+`</div>`;
+  }else{
+    const s=m.stats;
+    const pct=s.drives?Math.round(s.tds/s.drives*100)+"%":"–";
+    const cell=(k,v)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+    h+=`<h2>${esc(m.name)}</h2>
+      <div class="statgrid">
+        ${cell("DRIVES",s.drives)}${cell("TOUCHDOWNS",s.tds)}${cell("TD RATE",pct)}
+        ${cell("BEST DRIVE",s.best+" yd")}${cell("FEWEST PLAYS TO SCORE",s.fewest||"–")}${cell("HOUSE CALLS",s.perfect)}
+        ${cell("AVG MISS",s.answered?(s.missSum/s.answered).toFixed(1):"–")}${cell("YARDS / PLAY",s.plays?(s.yards/s.plays).toFixed(1):"–")}${cell("PLAYS",s.plays)}
+      </div>
+      <h3>MOST PICKED PLAYERS</h3>`;
+    const top=Object.entries(s.picks).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,5);
+    h+= top.length ? `<div class="rank">`+top.map(([n,c],i)=>`<div><span>${i+1}. ${esc(n)}</span><span>${c}×</span></div>`).join("")+`</div>`
+                   : `<p>No picks yet. Play a drive and they will show up here.</p>`;
+    const modes=Object.entries(s.modes);
+    if(modes.length) h+=`<h3>BY MODE</h3><div class="rank">`+
+      modes.map(([k,v])=>`<div><span>${esc(k.toUpperCase())}</span><span>${v.drives} drive${v.drives===1?"":"s"} · ${v.tds} TD</span></div>`).join("")+`</div>`;
+    h+=`<div class="row" style="margin-top:16px">
+        <button class="ghost small" id="acctOut">SIGN OUT</button>
+        <button class="ghost small" id="acctDel">DELETE PROFILE</button>
+      </div>
+      <div class="savehint">Saved on this device only. Clearing this browser's site data removes it.</div>`;
+    if(isDev()) h+=`<h3>OWNER TOOLS</h3>
+      <div class="row">
+        <button class="ghost small" id="devDaily">↺ RESET TODAY'S DAILY</button>
+        <button class="ghost small" id="devFresh">START FRESH (NEW PLAYER)</button>
+      </div>
+      <div class="savehint">Reset today's Daily lets you play it again for real. Start fresh wipes everything this game
+        saved on this device (profiles, stats, settings, the tutorial) and reloads, so it opens like a first visit.</div>`;
+  }
+  h+=`<h3>HELP IMPROVE THE GAME</h3>
+    <label class="toggle"><input type="checkbox" id="shareT" ${save.share?"checked":""}>
+      <span>Save anonymous play data. For each play it records the mode, the slot, the target number,
+        the player picked, how far off it was, yards gained and seconds used. Your profile name is never included.</span></label>
+    <div class="savehint">${TELEMETRY_URL
+        ? "Sent at the end of each drive."
+        : `This game is not connected to a server yet, so nothing is sent: records stay on this device until you copy them out. ${save.plays.length} play${save.plays.length===1?"":"s"} stored.`}</div>
+    <div class="row">
+      <button class="ghost small" id="shareShow">SHOW DATA</button>
+      <button class="ghost small" id="shareClear">CLEAR DATA</button>
+    </div>
+    <textarea id="shareOut" readonly hidden aria-label="Stored play data"></textarea>
+    ${storageOK?"":`<div class="note">This browser is blocking storage, so nothing can be saved here right now.</div>`}`;
+  $("acctCard").innerHTML=h;
+}
+function openAcct(){
+  if(live&&!paused&&clockSecs()) pause();   // don't burn the clock while the panel is open
+  paintAcct();
+  $("acct").classList.add("open");
+  const n=$("acctName"); if(n) n.focus(); else $("acctX").focus();
+}
+function closeAcct(){$("acct").classList.remove("open");}
+function trySignIn(v){
+  if(signIn(v)){paintAcct();}
+  else{const n=$("acctNote"); if(n) n.textContent="Type a name first.";}
+}
+$("acctBtn").onclick=openAcct;
+$("acct").addEventListener("click",e=>{
+  const t=e.target;
+  if(t.id==="acct"||t.id==="acctX") return closeAcct();
+  if(t.id==="acctGo") return trySignIn($("acctName").value);
+  if(t.dataset&&t.dataset.p) return trySignIn(t.dataset.p);
+  if(t.id==="acctOut"){save.current=null;persist();return paintAcct();}
+  if(t.id==="acctDel"){
+    if(t.dataset.sure){delete save.profiles[save.current];save.current=null;persist();return paintAcct();}
+    t.dataset.sure="1";t.textContent="CLICK AGAIN TO DELETE";return;
+  }
+  if(t.id==="shareShow"){
+    const o=$("shareOut");o.hidden=!o.hidden;
+    if(!o.hidden){o.value=JSON.stringify(save.plays,null,1);o.focus();o.select();}
+    t.textContent=o.hidden?"SHOW DATA":"HIDE DATA";return;
+  }
+  if(t.id==="shareClear"){save.plays=[];persist();return paintAcct();}
+  if(t.id==="devDaily"){
+    if(t.dataset.sure) return devResetDaily();
+    t.dataset.sure="1";t.textContent="TAP AGAIN TO RESET";return;
+  }
+  if(t.id==="devFresh"){
+    if(t.dataset.sure) return devStartFresh();
+    t.dataset.sure="1";t.textContent="TAP AGAIN: WIPES EVERYTHING";return;
+  }
+});
+$("acct").addEventListener("change",e=>{
+  if(e.target.id==="shareT"){save.share=e.target.checked;persist();}
+});
+$("acct").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&e.target.id==="acctName"){e.preventDefault();trySignIn(e.target.value);}
+});
+// Escape closes the panel wherever focus happens to be
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&$("acct").classList.contains("open")) closeAcct();
+});
+
+/* ---------- start screen ---------- */
+function intro(nudge){
+  endDaily();
+  if(pendingData){const d=pendingData;pendingData=null;applyData(d);}
+  pnp=null;paintPnpBar();
+  document.body.classList.remove("indrive");
+  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  paintBoard();drawPool();
+  const today=todayET(), no=dailyNo(today), saved=loadDaily(), done=!!(saved&&saved.done);
+  const dLabel = done ? `DAILY #${no} RESULT` : saved&&saved.shown ? `RESUME DAILY DRIVE #${no} ▸` : `PLAY DAILY DRIVE #${no} ▸`;
+  const free = mode==="learning" ? "no clock, averages listed in the player pool" : `${clockSecs()} seconds a play`;
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="tier" style="color:var(--chalk)">${done?"FREE PLAY UNLOCKED":"TODAY'S DRIVE"}</div>
+      <div class="rules">
+        ${done
+          ? `Daily Drive #${no} is done. Free play is open: <b>${SCORING[scoring].label}</b>${rk()?", <b>rookies only</b>":""}, ${free}.
+             Change the mode and scoring above.<br>
+             Next Daily Drive${nextDailyIn()?` in ${nextDailyIn()}`:" at 5 a.m. Eastern"}.`
+          : `<b>Daily Drive #${no}</b>: the same seven plays for everyone today, Full PPR scoring,
+             25 seconds a play, one try.<br>
+             Finish it to unlock <b>unlimited free play</b>.`}
+      </div>
+      ${done?`<div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="go">FREE PLAY ▸</button>
+        <button class="ghost" id="pnpGo">MULTIPLAYER 👥</button>
+      </div>
+      <div class="links">
+        <button class="linkbtn" id="dailyGo">Today's result</button>
+        <button class="linkbtn" id="redoGo">Redo the Daily</button>
+        ${dailyNo(yesterdayET())>=1?`<button class="linkbtn" id="yestGo">Yesterday's Daily</button>`:""}
+        <button class="linkbtn" id="howLink">How to play</button>
+      </div>`
+      :`<div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="dailyGo">${dLabel}</button>
+        <button class="ghost" id="go" disabled title="Finish today's Daily Drive first">🔒 FREE PLAY</button>
+        <button class="ghost" id="pnpGo" disabled title="Finish today's Daily Drive first">🔒 MULTIPLAYER</button>
+      </div>`}
+      <div class="note" id="note" style="text-align:center">${nudge&&!done?"Finish today's Daily Drive to unlock free play.":""}</div>
+      ${done?"":`<div class="links"><button class="linkbtn" id="howLink">How to play</button></div>`}
+    </div>`;
+  $("dailyGo").onclick=startDaily;
+  if($("redoGo")) $("redoGo").onclick=redoDaily;
+  if($("yestGo")) $("yestGo").onclick=()=>replayDaily(yesterdayET());
+  $("go").onclick=start;
+  $("pnpGo").onclick=pnpSetup;
+  $("howLink").onclick=openTut;
+  paintSimple();
+  (done?$("go"):$("dailyGo")).focus();
+}
+
+/* ---------- pause ---------- */
+function pause(){
+  if(!live||paused||over||!clockSecs()) return;
+  paused=true;closeAc();
+  const a=$("ans"); if(a) a.blur();
+  const ov=document.createElement("div");
+  ov.className="pauseov";ov.id="pov";
+  ov.innerHTML=`<div class="big">PAUSED</div>
+    <div class="sub">Clock stopped at ${left}s. The play is hidden until you resume.</div>
+    <div class="row" style="justify-content:center;margin-top:0">
+      <button id="resume">RESUME ▸</button>
+      ${daily&&!practice?"":`<button class="ghost" id="restart2">↺ RESTART</button>`}
+    </div>`;
+  $("panel").appendChild(ov);
+  $("resume").onclick=resume;
+  if($("restart2")) $("restart2").onclick=restart;
+  $("resume").focus();
+}
+function resume(){
+  if(!paused) return;
+  const ov=$("pov"); if(ov) ov.remove();
+  paused=false;
+  const a=$("ans"); if(a) a.focus();
+}
+
+/* ---------- name dropdown ---------- */
+// eligible, unused players that match what has been typed; listed A–Z so order gives nothing away
+function suggest(raw){
+  const q=norm(raw); if(!q) return [];
+  const aliasName=ALIAS[q]?norm(ALIAS[q]):null;
+  const out=[];
+  for(const pos of allowed) for(const p of POOL[pos]){
+    if(used.has(p[0])) continue;
+    const n=norm(p[0]), parts=n.split(" ");
+    let s=-9;
+    if(n===aliasName) s=-0.5;           // a typed nickname puts its player on top
+    else if(n.startsWith(q)) s=0;
+    else if(parts.some(w=>w.startsWith(q))) s=1;
+    else if(n.includes(q)) s=2;
+    else if(q.length>=4){
+      const d=Math.min(lev(q,n),lev(q,n.slice(0,q.length)),...parts.map(w=>lev(q,w)));
+      if(d<=(q.length<=5?1:2)) s=3+d;
+    }
+    if(s>-1) out.push({p,pos,s});
+  }
+  out.sort((a,b)=>a.s-b.s||a.p[0].localeCompare(b.p[0]));
+  return out.slice(0,8);
+}
+function drawAc(){
+  const box=$("ac"); if(!box) return;
+  if(!acList.length){box.className="ac";box.innerHTML="";return;}
+  box.innerHTML=acList.map((x,i)=>
+    `<div data-i="${i}" class="${i===acSel?"on":""}"><span>${x.p[0]}</span><small>${x.pos} · ${x.p[1]}</small></div>`).join("");
+  box.className="ac open";
+  const on=box.querySelector(".on"); if(on&&on.scrollIntoView) on.scrollIntoView({block:"nearest"});
+}
+function closeAc(){acList=[];acSel=-1;drawAc();}
+function choose(i){
+  const x=acList[i]; if(!x) return;
+  $("ans").value=x.p[0];
+  closeAc();
+  submit();
+}
+function wireInput(){
+  const a=$("ans"), box=$("ac");
+  acList=[];acSel=-1;
+  a.oninput=()=>{acList=suggest(a.value);acSel=acList.length?0:-1;drawAc();const n=$("note");if(n)n.textContent="";};
+  a.onkeydown=e=>{
+    if(e.key==="ArrowDown"&&acList.length){e.preventDefault();acSel=(acSel+1)%acList.length;drawAc();}
+    else if(e.key==="ArrowUp"&&acList.length){e.preventDefault();acSel=(acSel-1+acList.length)%acList.length;drawAc();}
+    else if(e.key==="Enter"){e.preventDefault();if(acSel>=0)choose(acSel);else submit();}
+    else if(e.key==="Escape"){closeAc();}
+  };
+  a.onblur=()=>setTimeout(closeAc,120);
+  // mousedown so the pick lands before the input loses focus
+  box.onmousedown=e=>{
+    const row=e.target.closest("[data-i]"); if(!row) return;
+    e.preventDefault();choose(+row.dataset.i);
+  };
+}
+
+function runClock(){
+  clearInterval(timer);
+  const total=clockSecs(); left=total;
+  if(!total) return;   // learning mode: untimed
+  timer=setInterval(()=>{
+    if(paused) return;
+    left--;
+    const ct=$("ct"), cb=$("cbar");
+    if(!ct){clearInterval(timer);return;}
+    ct.textContent=left;
+    if(left>0&&left<=3) sfx("tick");
+    cb.style.width=(left/total*100)+"%";
+    cb.className=left<=Math.ceil(total*0.28)?"low":"";
+    if(left<=0){clearInterval(timer);timeout();}
+  },1000);
+}
+
+// Nicknames and shorthand fans actually type. A real name that fits the play always wins over a
+// nickname, so e.g. "chase" on a running-back play is still Chase Brown.
+const ALIAS_RAW={
+  // quarterbacks
+  "ja17":"Josh Allen","joey b":"Joe Burrow","joe brrr":"Joe Burrow","joe burreaux":"Joe Burrow",
+  "showtime":"Patrick Mahomes","pat mahomes":"Patrick Mahomes","mahomes":"Patrick Mahomes",
+  "lj8":"Lamar Jackson","lamar":"Lamar Jackson","jd5":"Jayden Daniels","jayden":"Jayden Daniels",
+  "tlaw":"Trevor Lawrence","t law":"Trevor Lawrence","herbie":"Justin Herbert","mr irrelevant":"Brock Purdy",
+  "cj stroud":"C.J. Stroud","jj mccarthy":"J.J. McCarthy","burrow":"Joe Burrow","purdy":"Brock Purdy","maye":"Drake Maye",
+  // running backs
+  "cmc":"Christian McCaffrey","kw3":"Kenneth Walker III","k walker":"Kenneth Walker III",
+  "jt":"Jonathan Taylor","king henry":"Derrick Henry","sb26":"Saquon Barkley","saquon":"Saquon Barkley",
+  "ak41":"Alvin Kamara","ak":"Alvin Kamara","monty":"David Montgomery","etn":"Travis Etienne",
+  "tvh":"TreVeyon Henderson","mondre":"Rhamondre Stevenson","skatt":"Cam Skattebo","jk dobbins":"J.K. Dobbins",
+  "gibbs":"Jahmyr Gibbs","jahmyr":"Jahmyr Gibbs","bijan":"Bijan Robinson","dandre":"D'Andre Swift","swift":"D'Andre Swift",
+  "jeanty":"Ashton Jeanty","achane":"De'Von Achane",
+  // receivers
+  "jsn":"Jaxon Smith-Njigba","arsb":"Amon-Ra St. Brown","sun god":"Amon-Ra St. Brown","amon ra":"Amon-Ra St. Brown",
+  "st brown":"Amon-Ra St. Brown","saint brown":"Amon-Ra St. Brown","jj":"Justin Jefferson","jettas":"Justin Jefferson",
+  "jefferson":"Justin Jefferson","ceedee":"CeeDee Lamb","cd":"CeeDee Lamb","cd lamb":"CeeDee Lamb",
+  "chase":"Ja'Marr Chase","jamarr":"Ja'Marr Chase","puka":"Puka Nacua","nacua":"Puka Nacua",
+  "jamo":"Jameson Williams","tmac":"Tetairoa McMillan","tet":"Tetairoa McMillan","tmcmillan":"Tetairoa McMillan",
+  "tae":"Davante Adams","ajb":"A.J. Brown","aj brown":"A.J. Brown","mhj":"Marvin Harrison Jr.","btj":"Brian Thomas Jr.",
+  "dk":"DK Metcalf","deebo":"Deebo Samuel Sr.","olave":"Chris Olave","devonta":"DeVonta Smith","nabers":"Malik Nabers",
+  "flowers":"Zay Flowers",
+  // tight ends
+  "hock":"T.J. Hockenson","tj hockenson":"T.J. Hockenson","bowers":"Brock Bowers","mcbride":"Trey McBride",
+  "kelce":"Travis Kelce","kittle":"George Kittle","laporta":"Sam LaPorta"
+};
+const ALIAS={};
+for(const k in ALIAS_RAW) ALIAS[norm(k)]=ALIAS_RAW[k];
+
+// edit distance, capped for speed
+function lev(a,b){
+  const m=a.length,n=b.length;
+  if(Math.abs(m-n)>4) return 99;
+  let prev=Array.from({length:n+1},(_,i)=>i),cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+
+function find(raw,src){
+  src=src||POOL;
+  let q=norm(raw); if(!q) return null;
+
+  const exact=(s)=>{
+    for(const pos in src) for(const p of src[pos]) if(norm(p[0])===s) return {p,pos};
+    return null;
+  };
+  const partial=(s)=>{
+    const hits=[];
+    for(const pos in src) for(const p of src[pos]){
+      const parts=norm(p[0]).split(" ");
+      if(parts[parts.length-1]===s||parts[0]===s||(norm(p[0]).startsWith(s)&&s.length>3)) hits.push({p,pos,how:"partial"});
+    }
+    return hits;
+  };
+
+  const e=exact(q); if(e) return {...e,how:"exact"};
+
+  // a real name eligible for this play's slot beats any nickname
+  let hits=partial(q);
+  const inPos=hits.filter(h=>allowed.includes(h.pos));
+  if(inPos.length===1) return inPos[0];
+
+  const nick=ALIAS[q]?exact(norm(ALIAS[q])):null;
+  if(nick&&allowed.includes(nick.pos)) return {...nick,how:"alias"};
+  if(hits.length===1) return hits[0];
+  if(nick) return {...nick,how:"alias"};
+  if(hits.length>1) return {many:hits};
+
+  // autocorrect: nearest name within a tolerance that grows with length
+  const tol = q.length<=4 ? 1 : q.length<=8 ? 2 : 3;
+  let best=null,bestD=99,runnerD=99;
+  for(const pos in src) for(const p of src[pos]){
+    const full=norm(p[0]), parts=full.split(" ");
+    const surname=parts[parts.length-1];
+    const d=Math.min(lev(q,full),lev(q,surname));
+    // a name at the position this play asks for wins a tie
+    const score=d-(allowed.includes(pos)?0.25:0);
+    if(score<bestD){runnerD=bestD;bestD=score;best={p,pos,how:"fuzzy",d};}
+    else if(score<runnerD){runnerD=score;}
+  }
+  if(best&&best.d<=tol&&runnerD-bestD>=0.25) return best;
+  if(best&&best.d<=tol) return {many:[best]};   // a tie between near matches
+  return null;
+}
+
+function submit(){
+  if(over||paused||!live) return;
+  closeAc();
+  const raw=$("ans").value.trim();
+  if(!raw) return nudge("Type a player name first.");
+  const hit=find(raw);
+  if(!hit&&rk()){
+    const v=find(raw,ALL);
+    if(v&&!v.many) return nudge(`${v.p[0]} isn't a rookie. Rookies Only uses the 2026 rookie class.`);
+  }
+  if(!hit&&isRec()){
+    const v=find(raw,EVERY);
+    if(v&&!v.many) return nudge(`${v.p[0]} isn't in ${SCORING[scoring].label}: it's ${SCORING[scoring].who} only.`);
+  }
+  if(!hit) return nudge(`"${raw}" isn't in the pool${clockSecs()?" — clock's still running":""}.`);
+  if(hit.many) return nudge(`Several players match "${raw}" — use a full name.`);
+  if(!allowed.includes(hit.pos))
+    return nudge(`${hit.p[0]} is a ${hit.pos}. This play needs ${allowed.length>1?slotHint(slot):"a "+slot}.`);
+  if(used.has(hit.p[0])) return nudge(`Already used ${hit.p[0]} this drive.`);
+  clearInterval(timer);
+  used.add(hit.p[0]);
+  const fixed = norm(raw)!==norm(hit.p[0]) ? raw : null;
+  sfx("snap");
+  score(hit.p,fixed);
+}
+
+function nudge(msg){
+  const n=$("note"); if(n) n.textContent=msg;
+  const a=$("ans"); if(a){a.select();a.focus();}
+}
+
+function timeout(){
+  if(over) return;
+  showResult(null,-10,"DELAY OF GAME","The clock beat you. Loss of 10.");
+}
+
+function score(p,fixed){
+  const diff=Math.abs(p[2]-target);
+  const r=gainFor(p);
+  const [tier,blurb]=tierFor(r.g,r.best,r.pct>=0.75);
+  const extra = r.best ? `closest of ${r.of} eligible players` : `${ord(r.rank)} closest of ${r.of} eligible players`;
+  showResult(p,r.g,tier,blurb,diff,fixed,extra,r);
+}
+
+function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
+  live=false;paused=false;
+  const best=!!(rk&&rk.best);
+  const top=closestList(p,3);
+  recordPlay(p,gain,p?diff:null,best);
+  if(daily){
+    dstate.plays.push({slot,target,name:p?p[0]:null,avg:p?p[2]:null,diff:p?+diff.toFixed(2):null,
+      pct:rk?+rk.pct.toFixed(4):null,best,gain,tier});
+    saveDaily();
+  }
+  const before=yards;
+  // the ball can't go behind your own goal line
+  yards=Math.max(0,Math.min(GOAL,yards+gain));
+  paintBoard();
+  if(gain!==0){
+    const g=$("gain");
+    g.style.left=Math.min(88,2+before*.86)+"%";
+    g.textContent=(gain>0?"+":"")+gain;
+    g.style.color=gain>0?"":"var(--hot)";
+    g.classList.add("show");
+    setTimeout(()=>g.classList.remove("show"),1400);
+  }
+  const col=gain>=20?"var(--gold)":gain>=10?"var(--cool)":gain>0?"var(--chalk)":"var(--hot)";
+  const perfect = best;
+  $("panel").innerHTML=`
+    <div class="res${perfect?" perfect":""}">
+      ${perfect?`<div class="rays"></div><div class="halo"></div>`:""}
+      <div class="tier" style="color:${perfect?"var(--gold)":col}">${tier}</div>
+      ${p?`<div class="who">${p[0]} <span style="color:var(--dim)">· ${p[1]}</span></div>
+           ${fixed?`<div class="fixed">read "${fixed}" as that</div>`:""}
+           <div class="num">he averages <b style="color:var(--chalk)">${p[2].toFixed(1)}</b>
+             · you needed <b style="color:var(--chalk)">${target.toFixed(1)}</b><br>
+             off by ${diff.toFixed(1)} ${unitShort()}</div>`
+          :`<div class="num" style="margin-top:14px">${blurb}</div>`}
+      <div class="yds" style="${gain<0?"color:var(--hot)":""}">${gain>0?"+"+gain+" YARDS":gain<0?`LOSS OF ${-gain}`:"NO GAIN"}</div>
+      ${extra?`<div class="extra">${extra}</div>`:""}
+      ${revealHTML(top,p)}
+      <div class="entry" style="justify-content:center">
+        <button id="nx">${pnp?pnpNextLabel():yards>=GOAL?"SCORE IT":play>=PLAYS?"SEE THE DRIVE":"NEXT PLAY ▸"}</button>
+        ${yards<GOAL&&play<PLAYS&&(!daily||practice)&&!pnp?`<button class="ghost" id="restart">↺ RESTART</button>`:""}
+      </div>
+    </div>`;
+  $("nx").onclick=pnp?pnpAdvance:nextPlay;
+  if($("restart")) $("restart").onclick=restart;
+  $("nx").focus();
+  if(perfect) sparkle();
+  setTimeout(()=>sfx(!p?"whistle":best?"house":gain>0?"gain":gain===0?"zero":"loss",gain),110);
+  logLine(play,slot,p?p[0]:null,p?p[2]:null,target,tier,gain);
+  drawPool();
+  if(!practice){
+  }
+}
+
+function finish(scored,replay){
+  if(pnp){pnp.p[pnp.cur].done=true;return pnpAdvance();}
+  over=true;live=false;paused=false;clearInterval(timer);
+  paintSimple();
+  $("rookieT").disabled=scoring==="pass";
+  document.body.classList.remove("indrive");
+  paintBoard();
+  if(!replay){
+    recordDrive(scored);
+    if(daily){dstate.done=true;saveDaily();}
+    if(daily&&!practice) recordHist(dstate);
+    paintSimple();
+    if(scored) confetti();
+    sfx(scored?"td":"stall");
+  }
+  const head=`<div class="tier" style="color:${scored?"var(--gold)":"var(--hot)"}">${scored?"TOUCHDOWN":"DRIVE STALLED"}</div>
+      <div class="num" style="margin-top:14px">
+        ${scored?`You covered 100 yards in ${play} play${play>1?"s":""}.`
+                :`You moved the ball ${yards} yards. ${GOAL-yards} short.`}</div>`;
+  const hint=`<div class="savehint">${me()?`Saved to ${esc(me().name)}'s profile.`:"Sign in (top left) to keep your record and stats."}</div>`;
+  if(daily&&practice){
+    const isToday=daily.date===todayET();
+    const h=hist[daily.date];
+    const offTxt=h?(h.td?`touchdown in ${h.plays} plays`:`${h.yards} yards`):"";
+    const date=daily.date;
+    $("panel").innerHTML=`
+    <div class="res">
+      <div class="dailytag">DAILY DRIVE #${daily.no} · ${isToday?"REPLAY":date+" · REPLAY"}</div>
+      ${head}
+      <div class="emoji" aria-label="Play by play accuracy">${dailyEmoji()}</div>
+      <div class="savehint">This replay doesn't count: it isn't saved to your profile, your streak or your shared result.
+        ${offTxt?`Your official result ${isToday?"today":"that day"}: <b>${offTxt}</b>.`:""}</div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="redo">PLAY IT AGAIN ↺</button>
+        ${isToday?`<button class="ghost" id="official">OFFICIAL RESULT</button>`:""}
+        <button class="ghost" id="free">FREE PLAY ▸</button>
+      </div>
+    </div>`;
+    $("redo").onclick=()=>replayDaily(date);
+    if($("official")) $("official").onclick=startDaily;
+    $("free").onclick=intro;
+    return;
+  }
+  if(daily){
+    const wait=nextDailyIn();
+    $("panel").innerHTML=`
+    <div class="res">
+      <div class="dailytag">DAILY DRIVE #${daily.no} · ${daily.date}</div>
+      ${head}
+      <div class="emoji" aria-label="Play by play accuracy">${dailyEmoji()}</div>
+      <div class="legend">🟪 closest possible · 🟩 20+ yds · 🟨 10+ · 🟧 1+ · 🟥 lost yards · ⬛ no answer</div>
+      <div class="subline">${streakText()}<span class="pct-today${streakText()?"":" solo"}"></span></div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="shareBtn">SHARE RESULT</button>
+        <button class="ghost" id="free">FREE PLAY ▸</button>
+      </div>
+      <div class="savehint" id="shareMsg" aria-live="polite"></div>
+      <textarea class="sharebox" id="shareBox" readonly hidden aria-label="Result to share"></textarea>
+      <div class="links">
+        <button class="linkbtn" id="statsGo">Stats</button>
+        <button class="linkbtn" id="redo">Redo the Daily</button>
+      </div>
+      <div class="savehint">${wait?`Next Daily Drive in ${wait}. `:""}${me()?`Saved to ${esc(me().name)}'s profile.`:""}</div>
+    </div>`;
+    $("shareBtn").onclick=shareDaily;
+    $("statsGo").onclick=openStats;
+    $("redo").onclick=redoDaily;
+    $("free").onclick=intro;
+    showPct(daily.date);
+    return;
+  }
+  $("panel").innerHTML=`
+    <div class="res">
+      ${head}
+      <div class="entry" style="justify-content:center">
+        <button id="again">NEW DRIVE</button>
+      </div>
+      ${hint}
+    </div>`;
+  $("again").onclick=start;
+}
+
+function paintBoard(){
+  $("sYd").textContent=yards;
+  $("sPlay").textContent=`${Math.min(play,PLAYS)} / ${PLAYS}`;
+  $("sGo").textContent=Math.max(0,GOAL-yards);
+  $("ball").style.left=Math.min(92,2+yards*.86)+"%";
+  if(pnp) paintPnpBar();
+}
+
+function drawPool(){
+  const el=$("pool");el.innerHTML="";
+  for(const pos in POOL){
+    if(!POOL[pos].length) continue;
+    const h=document.createElement("h4");h.textContent=pos+(isRec()?" · "+SCORING[scoring].word.toUpperCase():"");el.appendChild(h);
+    [...POOL[pos]].sort((a,b)=>a[0].localeCompare(b[0])).forEach(p=>{
+      const d=document.createElement("div");
+      if(used.has(p[0]))d.className="used";
+      d.innerHTML=`<span>${p[0]}</span><small>${p[1]}${mode==="learning"?`<b>${p[2].toFixed(1)}</b>`:""}</small>`;
+      el.appendChild(d);
+    });
+  }
+}
+
+/* ---------- theme switch ---------- */
+const THEMES={dark:"☾ DARK",light:"☀ LIGHT",christmas:"❄ CHRISTMAS"};
+const themeLabel=t=>{const [i,...w]=THEMES[t].split(" ");return `${i} <span class="lbl">${w.join(" ")}</span>`;};
+const theme=()=>document.documentElement.dataset.theme||"dark";
+const isLight=()=>theme()==="light";
+function setTheme(t){
+  if(!THEMES[t]) t="dark";
+  if(t==="dark") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme=t;
+  $("themeBtn").innerHTML=themeLabel(t);
+  $("tmenu").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  try{localStorage.setItem("hm-theme",t);}catch(e){}
+  snow(t==="christmas");
+}
+
+/* snowfall over the whole page in the Christmas theme */
+const snowC=$("snow"), sctx=snowC.getContext("2d");
+let flakes=[], snowRaf=null, snowOn=false, snowLast=0;
+function makeFlake(w,h,top){
+  const z=Math.random();                     // depth: far flakes are small, slow and faint
+  return {x:Math.random()*w, y:top?-6:Math.random()*h, r:0.8+z*2.2, v:0.25+z*0.9,
+    a:0.35+z*0.5, d:Math.random()*6.283, sway:0.2+Math.random()*0.5};
+}
+function sizeSnow(){
+  const w=innerWidth,h=innerHeight,dpr=Math.min(2,window.devicePixelRatio||1);
+  const ow=snowC.width/dpr||w, oh=snowC.height/dpr||h;
+  snowC.width=Math.round(w*dpr);snowC.height=Math.round(h*dpr);
+  sctx.setTransform(dpr,0,0,dpr,0,0);
+  // keep flakes where they were, scaled to the new size, and match the count to the screen area
+  for(const f of flakes){f.x=f.x/ow*w;f.y=f.y/oh*h;}
+  const want=Math.max(45,Math.min(200,Math.round(w*h/9000)));
+  while(flakes.length<want) flakes.push(makeFlake(w,h,false));
+  flakes.length=want;
+}
+function snowTick(t){
+  if(!snowOn) return;
+  const dt=Math.min(3,(t-(snowLast||t))/16.7)||1; snowLast=t;
+  const w=innerWidth,h=innerHeight;
+  sctx.clearRect(0,0,w,h);
+  for(const f of flakes){
+    f.y+=f.v*dt; f.d+=0.012*dt; f.x+=Math.sin(f.d)*f.sway*dt;
+    if(f.y>h+6){Object.assign(f,makeFlake(w,h,true));}
+    if(f.x<-6) f.x=w+6; else if(f.x>w+6) f.x=-6;
+    sctx.globalAlpha=f.a;
+    sctx.beginPath();sctx.arc(f.x,f.y,f.r,0,6.283);sctx.fillStyle="#fff";sctx.fill();
+  }
+  sctx.globalAlpha=1;
+  snowRaf=requestAnimationFrame(snowTick);
+}
+function snow(on){
+  const still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  snowOn=!!on&&!still;
+  cancelAnimationFrame(snowRaf);snowLast=0;
+  if(!snowOn){snowC.style.display="none";return;}
+  snowC.style.display="block";
+  sizeSnow();
+  snowRaf=requestAnimationFrame(snowTick);
+}
+addEventListener("resize",()=>{if(snowOn) sizeSnow();});
+document.addEventListener("visibilitychange",()=>{
+  if(!snowOn) return;
+  cancelAnimationFrame(snowRaf);snowLast=0;
+  if(!document.hidden) snowRaf=requestAnimationFrame(snowTick);
+});
+
+// the two top-right menus: opening one closes the other
+function toggleMenu(id){
+  for(const m of ["fmenu","tmenu"]) $(m).classList.toggle("open", m===id && !$(m).classList.contains("open"));
+}
+$("themeBtn").onclick=()=>toggleMenu("tmenu");
+// string lights on or off, remembered on this device
+$("lightsT").checked=document.documentElement.dataset.lights!=="off";
+$("lightsT").onchange=e=>{
+  if(e.target.checked) delete document.documentElement.dataset.lights;
+  else document.documentElement.dataset.lights="off";
+  try{localStorage.setItem("hm-lights",e.target.checked?"on":"off");}catch(err){}
+};
+$("tmenu").onclick=e=>{
+  e.stopPropagation();
+  const b=e.target.closest("[data-t]"); if(!b) return;
+  setTheme(b.dataset.t);$("tmenu").classList.remove("open");
+};
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".fieldpick")){$("fmenu").classList.remove("open");$("tmenu").classList.remove("open");}
+});
+setTheme(theme());
+
+/* ---------- game mode ---------- */
+function paintMode(){
+  $("settings").querySelectorAll("[data-m]").forEach(b=>{
+    b.classList.toggle("on",b.dataset.m===mode);
+    b.setAttribute("aria-pressed",b.dataset.m===mode);
+  });
+  $("poolBox").querySelector("summary").textContent =
+    "SHOW THE PLAYER POOL"+(rk()?" · ROOKIES":"")+(mode==="learning"?" · WITH AVERAGES":"");
+}
+// switching mode always goes back to the start screen, so one drive is played under one set of rules
+/* ---------- Home: leave any game (free play, Multiplayer, replays) and go back to the start screen ---------- */
+function goHome(){
+  if(inOfficialDaily()){
+    const n=$("note"); if(n) n.textContent="The Daily Drive can't be left. Finish it to unlock everything else.";
+    return;
+  }
+  clearInterval(timer);live=false;paused=false;
+  closeAc();
+  $("acct").classList.remove("open");$("statsM").classList.remove("open");$("tut").classList.remove("open");
+  $("fmenu").classList.remove("open");$("tmenu").classList.remove("open");
+  intro();
+  scrollTo({top:0,behavior:"smooth"});
+}
+$("homeBtn").onclick=goHome;
+$("homeLogo").onclick=e=>{e.preventDefault();goHome();};
+function lockedNote(){
+  const n=$("note"); if(n) n.textContent="Settings are locked during the Daily Drive.";
+}
+function setMode(m){
+  if(daily&&!over) return lockedNote();
+  endDaily();
+  if(!MODES[m]||m===mode) return;
+  mode=m;
+  try{localStorage.setItem("hm-mode",m);}catch(e){}
+  clearInterval(timer);
+  paintMode();
+  intro();
+}
+$("settings").onclick=e=>{const b=e.target.closest("[data-m]"); if(b) setMode(b.dataset.m);};
+
+/* ---------- scoring format: rebuilds every average, then back to the start screen ---------- */
+function paintScoring(){
+  document.querySelectorAll(".settings.scoring [data-s]").forEach(b=>{
+    b.classList.toggle("on",b.dataset.s===scoring);
+    b.setAttribute("aria-pressed",b.dataset.s===scoring);
+  });
+}
+function setScoring(v){
+  if(daily&&!over) return lockedNote();
+  endDaily();
+  if(!SCORING[v]||v===scoring) return;
+  scoring=v;
+  try{localStorage.setItem("hm-scoring",v);}catch(e){}
+  clearInterval(timer);
+  buildPool();paintScoring();paintExtras();
+  intro();
+}
+for(const id of ["scoringBar","yardsBar"]) $(id).onclick=e=>{const b=e.target.closest("[data-s]"); if(b) setScoring(b.dataset.s);};
+try{rookie=localStorage.getItem("hm-rookie")==="1";localStorage.removeItem("hm-hints");}catch(e){}
+try{const v=localStorage.getItem("hm-scoring"); if(SCORING[v]) scoring=v;}catch(e){}
+buildPool();
+try{const m=localStorage.getItem("hm-mode"); if(MODES[m]) mode=m;}catch(e){}
+
+/* ---------- field colour picker ---------- */
+const FIELD_SW={green:"#1f6b33",blue:"#0b3fa6",red:"#a01722"};
+function setField(f){
+  if(!FIELD_SW[f]) f="green";
+  if(f==="green") delete document.documentElement.dataset.field;
+  else document.documentElement.dataset.field=f;
+  $("fieldSw").style.background=FIELD_SW[f];
+  $("fmenu").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.f===f));
+  try{localStorage.setItem("hm-field",f);}catch(e){}
+}
+$("fieldBtn").onclick=()=>toggleMenu("fmenu");
+$("fmenu").onclick=e=>{
+  const b=e.target.closest("[data-f]"); if(!b) return;
+  setField(b.dataset.f);$("fmenu").classList.remove("open");
+};
+setField(document.documentElement.dataset.field||"green");
+
+/* ---------- touchdown confetti ---------- */
+const cvs=$("confetti"), ctx=cvs.getContext("2d");
+let bits=[], raf=null;
+
+function confetti(){
+  cvs.style.display="block";
+  cvs.width=innerWidth; cvs.height=innerHeight;
+  const cols=theme()==="christmas"?["#d42426","#1f8a4c","#f2c14e","#ffffff","#b3001b","#2fbf71"]:["#f5c542","#e8523f","#3fa7d6","#8bc34a","#f0f4f8","#d94fd9"];
+  bits=[];
+  for(let i=0;i<190;i++){
+    // two bursts from the corners, like a stadium cannon
+    const left=i%2===0;
+    bits.push({
+      x: left? -10 : cvs.width+10,
+      y: cvs.height*(0.55+Math.random()*0.3),
+      vx:(left?1:-1)*(7+Math.random()*11),
+      vy:-(9+Math.random()*11),
+      w:5+Math.random()*7, h:8+Math.random()*9,
+      c:cols[Math.floor(Math.random()*cols.length)],
+      rot:Math.random()*Math.PI, vr:(Math.random()-.5)*.35,
+      drag:.985+Math.random()*.012
+    });
+  }
+  cancelAnimationFrame(raf);
+  let frames=0;
+  (function tick(){
+    frames++;
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    let live=0;
+    for(const b of bits){
+      b.vy+=0.34; b.vx*=b.drag; b.x+=b.vx; b.y+=b.vy; b.rot+=b.vr;
+      if(b.y<cvs.height+40) live++;
+      ctx.save();
+      ctx.translate(b.x,b.y); ctx.rotate(b.rot);
+      ctx.fillStyle=b.c;
+      ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h*Math.abs(Math.cos(b.rot*1.4)));
+      ctx.restore();
+    }
+    if(live>0&&frames<420) raf=requestAnimationFrame(tick);
+    else{ctx.clearRect(0,0,cvs.width,cvs.height);cvs.style.display="none";}
+  })();
+}
+
+/* gold shower when an answer lands exactly on the number */
+function sparkle(){
+  const box=$("panel").getBoundingClientRect();
+  const cx=box.left+box.width/2, cy=box.top+box.height/2;
+  cvs.style.display="block";
+  cvs.width=innerWidth; cvs.height=innerHeight;
+  const cols=isLight()?["#f5c542","#e0a200","#ffd24a","#c98a00"]:["#f5c542","#ffe9a3","#ffd24a","#fff6d8"];
+  bits=[];
+  for(let i=0;i<110;i++){
+    const a=Math.random()*Math.PI*2, sp=2+Math.random()*9;
+    bits.push({
+      x:cx,y:cy,
+      vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-3,
+      w:3+Math.random()*4, h:3+Math.random()*4,
+      c:cols[Math.floor(Math.random()*cols.length)],
+      rot:Math.random()*Math.PI, vr:(Math.random()-.5)*.5,
+      drag:.955+Math.random()*.03
+    });
+  }
+  cancelAnimationFrame(raf);
+  let f=0;
+  (function tick(){
+    f++;
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    for(const b of bits){
+      b.vy+=0.22; b.vx*=b.drag; b.vy*=b.drag; b.x+=b.vx; b.y+=b.vy; b.rot+=b.vr;
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,1-f/95);
+      ctx.translate(b.x,b.y); ctx.rotate(b.rot);
+      ctx.fillStyle=b.c; ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h);
+      ctx.restore();
+    }
+    if(f<95) raf=requestAnimationFrame(tick);
+    else{ctx.clearRect(0,0,cvs.width,cvs.height);cvs.style.display="none";}
+  })();
+}
+
+// yard markers
+(function(){
+  const f=$("field");
+  for(let y=10;y<=80;y+=10){
+    const x=2+y*.86;
+    const l=document.createElement("div");l.className="yard"+(y===50?" five":"");l.style.left=x+"%";f.appendChild(l);
+    const n=document.createElement("div");n.className="ynum";n.style.left=x+"%";n.textContent=y;f.appendChild(n);
+  }
+})();
+
+/* ---------- closest answers ---------- */
+// eligible players nearest the target; the answer given (if any) sorts first among ties
+function closestList(pick,n){
+  const me=pick?pick[0]:null;
+  const pool=allowed.flatMap(pos=>POOL[pos].map(p=>({p,pos}))).filter(x=>!used.has(x.p[0])||x.p[0]===me);
+  pool.sort((a,b)=>Math.abs(a.p[2]-target)-Math.abs(b.p[2]-target)||((b.p[0]===me)-(a.p[0]===me))||a.p[0].localeCompare(b.p[0]));
+  return pool.slice(0,n);
+}
+function revealHTML(top,p){
+  if(!top.length) return "";
+  const me=p?p[0]:null;
+  return `<div class="reveal">Closest: ${top.map(x=>`<b class="${x.p[0]===me?"me":""}">${esc(x.p[0])} ${x.p[2].toFixed(1)}</b>`).join(" · ")}</div>`;
+}
+
+/* ---------- sound effects: made in the browser, nothing to download ---------- */
+let soundOn=true;
+try{soundOn=localStorage.getItem("hm-sound")!=="off";}catch(e){}
+let actx=null;
+function audio(){
+  if(!soundOn) return null;
+  try{
+    if(!actx){const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; actx=new C();}
+    if(actx.state==="suspended") actx.resume();
+    return actx;
+  }catch(e){return null;}
+}
+function tone(f,t0,dur,type,vol,f2){
+  const a=audio(); if(!a) return;
+  const T=a.currentTime+t0, o=a.createOscillator(), g=a.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(f,T);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,T+dur);
+  g.gain.setValueAtTime(0.0001,T);
+  g.gain.exponentialRampToValueAtTime(vol||0.12,T+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,T+dur);
+  o.connect(g).connect(a.destination); o.start(T); o.stop(T+dur+0.05);
+}
+function noise(t0,dur,vol,freq,q,attack){
+  const a=audio(); if(!a) return;
+  const T=a.currentTime+t0, len=Math.floor(a.sampleRate*dur), buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  const src=a.createBufferSource(), f=a.createBiquadFilter(), g=a.createGain();
+  src.buffer=buf; f.type="bandpass"; f.frequency.value=freq; f.Q.value=q;
+  g.gain.setValueAtTime(0.0001,T);
+  g.gain.exponentialRampToValueAtTime(vol,T+dur*attack);
+  g.gain.exponentialRampToValueAtTime(0.0001,T+dur);
+  src.connect(f).connect(g).connect(a.destination); src.start(T); src.stop(T+dur+0.05);
+}
+// referee's whistle: a high tone with a fast pea-rattle wobble
+function whistle(t0,dur){
+  const a=audio(); if(!a) return;
+  const T=a.currentTime+t0, o=a.createOscillator(), lfo=a.createOscillator(), lg=a.createGain(), g=a.createGain();
+  o.frequency.value=2900; lfo.frequency.value=38; lg.gain.value=170;
+  lfo.connect(lg).connect(o.frequency);
+  g.gain.setValueAtTime(0.0001,T); g.gain.exponentialRampToValueAtTime(0.08,T+0.03);
+  g.gain.setValueAtTime(0.08,T+dur-0.06); g.gain.exponentialRampToValueAtTime(0.0001,T+dur);
+  o.connect(g).connect(a.destination); o.start(T); lfo.start(T); o.stop(T+dur+0.05); lfo.stop(T+dur+0.05);
+}
+const SFX={
+  snap(){tone(170,0,.09,"square",.05,85);noise(0,.07,.07,1800,1,.2);},
+  gain(g){const n=g>=20?3:g>=10?2:1;for(let i=0;i<n;i++) tone(523*Math.pow(1.26,i),i*.08,.18,"triangle",.12);},
+  zero(){tone(311,0,.16,"triangle",.09);},
+  loss(){tone(220,0,.32,"sawtooth",.06,104);},
+  house(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.07,.42,"sine",.1));},
+  td(){whistle(0,.55);noise(.3,2.6,.22,650,.5,.35);noise(.3,2.6,.1,2100,.6,.4);
+    [392,523,659,784].forEach((f,i)=>tone(f,.6+i*.13,.55,"triangle",.1));},
+  stall(){tone(330,0,.25,"triangle",.09,294);tone(262,.24,.5,"triangle",.09,196);},
+  whistle(){whistle(0,.45);},
+  tick(){tone(1250,0,.035,"square",.03);},
+  ach(){[784,988,1175,1568].forEach((f,i)=>tone(f,i*.07,.32,"sine",.08));}
+};
+function sfx(name,arg){if(!soundOn) return; try{SFX[name](arg);}catch(e){}}
+function paintSound(){$("soundT").checked=soundOn;}
+$("soundT").onchange=e=>{
+  soundOn=e.target.checked;
+  try{localStorage.setItem("hm-sound",soundOn?"on":"off");}catch(err){}
+  if(soundOn) sfx("ach");
+};
+
+/* ---------- Daily history: streaks and the results chart, kept on this device ---------- */
+const HIST_KEY="hm-hist-v1";
+let hist={};
+function loadHist(){
+  try{const h=JSON.parse(localStorage.getItem(HIST_KEY)||"{}"); if(h&&typeof h==="object") hist=h;}catch(e){}
+  // an official Daily finished before this feature existed still counts
+  const d=loadDaily(); if(d&&d.done&&!hist[d.date]) recordHist(d,true);
+}
+function saveHist(){try{localStorage.setItem(HIST_KEY,JSON.stringify(hist));}catch(e){}}
+function recordHist(st,quiet){
+  if(!st||!st.date) return;
+  const y=st.plays.reduce((a,r)=>Math.max(0,Math.min(GOAL,a+r.gain)),0);
+  const old=hist[st.date]||{};
+  hist[st.date]={td:y>=GOAL,plays:st.plays.length,yards:y,hc:st.plays.filter(r=>r.best).length,posted:!!old.posted};
+  saveHist();
+  const {cur}=streaks();
+
+}
+// a day streak: Dailies finished on back-to-back days, still alive if the last one was today or yesterday
+function streaks(){
+  const days=Object.keys(hist).sort();
+  let best=0,run=0,prev=null;
+  for(const d of days){run=(prev&&addDays(prev,1)===d)?run+1:1;best=Math.max(best,run);prev=d;}
+  const t=todayET();
+  let cur=0, d=hist[t]?t:addDays(t,-1);
+  while(hist[d]){cur++;d=addDays(d,-1);}
+  return {cur,best};
+}
+function streakText(){
+  const {cur}=streaks();
+  return cur?`🔥 ${cur}-day streak`:"";
+}
+// score used to compare Daily results: a touchdown in n plays = 200 - n, otherwise the yards reached
+const dailyScore=h=>h.td?200-h.plays:h.yards;
+
+/* ---------- "you beat X% of players today" ----------
+   Works from either of two places that collect everyone's Daily results:
+   - STATS_URL: the Cloudflare Pages Function in functions/api/daily.js (set to "/api/daily" once hosted)
+   - this game's shared database when it runs as a Claude artifact
+   With neither, the line explains that the number appears once the game is online. */
+const STATS_URL=HOSTED?"/api/daily":"";
+function deviceId(){
+  try{
+    let id=localStorage.getItem("hm-id");
+    if(!id){id=(Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,24);localStorage.setItem("hm-id",id);}
+    return id;
+  }catch(e){return "anon"+Math.floor(Math.random()*1e9);}
+}
+async function sharedDb(){
+  try{
+    if(!(window.claude&&typeof window.claude.use==="function")) return null;
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user) return null;
+    const uid=await user.id();
+    return uid?{db,uid}:null;
+  }catch(e){return null;}
+}
+const within=(p,ms)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]);
+async function fetchPct(date){
+  const h=hist[date]; if(!h) return null;
+  const s=dailyScore(h), post=!h.posted;
+  if(STATS_URL){
+    const url=STATS_URL+(STATS_URL.includes("?")?"&":"?")+"date="+encodeURIComponent(date);
+    const r=await fetch(url,post?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({s,id:deviceId()})}:{cache:"no-store"});
+    if(!r.ok) return null;
+    const {counts}=await r.json();
+    if(post){h.posted=true;saveHist();}
+    let n=0,beat=0;
+    for(const k in counts){const c=+counts[k]||0;n+=c;if(+k<s) beat+=c;}
+    return {beat,n:Math.max(0,n-1)};   // the total includes this result once
+  }
+  const a=await sharedDb(); if(!a) return {offline:true};
+  const ref=a.db.collection("runs");
+  if(post){try{await ref.doc(a.uid).set({date,s,at:Date.now()});h.posted=true;saveHist();}catch(e){}}
+  const snap=await ref.where("date","==",date).get();
+  let n=0,beat=0;
+  for(const d of snap.docs){
+    if(d.id===a.uid) continue;
+    const v=+((d.data()||{}).s); if(!isFinite(v)) continue;
+    n++; if(v<s) beat++;
+  }
+  return {beat,n};
+}
+let pctMemo={};
+// fills every .pct-today on screen; says nothing when results can't be reached
+async function showPct(date){
+  if(!hist[date]) return;
+  let r=pctMemo[date];
+  if(!r){
+    try{r=await within(fetchPct(date),12000);}catch(e){r=null;}
+    if(r&&!r.offline) pctMemo[date]=r;
+  }
+  if(!r||r.offline) return;
+  const txt = r.n===0 ? `first to finish today` : `you beat <b>${Math.round(r.beat/r.n*100)}%</b> of players today`;
+  document.querySelectorAll(".pct-today").forEach(el=>{el.innerHTML=el.classList.contains("solo")?txt.charAt(0).toUpperCase()+txt.slice(1):txt;});
+}
+
+/* ---------- stats panel ---------- */
+function paintStats(){
+  const days=Object.keys(hist).sort(), n=days.length, tds=days.filter(d=>hist[d].td).length;
+  const {cur,best}=streaks(), today=hist[todayET()];
+  const cell=(k,v)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const buckets=[3,4,5,6,7].map(k=>({k:`TD IN ${k}`,c:days.filter(d=>hist[d].td&&hist[d].plays===k).length,on:!!(today&&today.td&&today.plays===k)}));
+  buckets.push({k:"NO TD",c:n-tds,on:!!(today&&!today.td)});
+  const max=Math.max(1,...buckets.map(b=>b.c));
+  $("statsCard").innerHTML=`<button class="ghost x" id="statsX" aria-label="Close">✕</button>
+    <h2>STATS</h2>
+    <div class="statgrid four">${cell("PLAYED",n)}${cell("TD %",n?Math.round(tds/n*100):"–")}${cell("STREAK",cur)}${cell("BEST",best)}</div>
+    ${today?`<div class="subline" style="text-align:center"><span class="pct-today solo"></span></div>`:""}
+    <h3>DAILY RESULTS</h3>
+    ${n?`<div class="dist">${buckets.map(b=>`<div class="b${b.on?" today":""}"><span>${b.k}</span><i style="width:${Math.max(6,b.c/max*100)}%">${b.c}</i></div>`).join("")}</div>`
+       :`<p>Finish a Daily Drive and your results show up here.</p>`}`;
+  if(today) showPct(todayET());
+}
+function openStats(){
+  if(live&&!paused&&clockSecs()) pause();
+  paintStats();
+  $("statsM").classList.add("open");
+  $("statsX").focus();
+}
+function closeStats(){$("statsM").classList.remove("open");}
+$("statsBtn").onclick=openStats;
+$("statsM").addEventListener("click",e=>{
+  if(e.target.id==="statsM"||e.target.id==="statsX") return closeStats();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("statsM").classList.contains("open")) closeStats();});
+
+/* ---------- Rookies Only checkbox ---------- */
+function paintExtras(){
+  $("rookieT").checked=rk();
+  // locked while the Daily's own rules are in force, and not used by Passing
+  $("rookieT").disabled=!!prefs||scoring==="pass";
+  $("rookieNote").textContent=scoring==="pass"&&!prefs?"not used in Passing":"2026 class";
+  paintMode();
+}
+$("rookieT").onchange=e=>{
+  if(daily&&!over){e.target.checked=rookie;return lockedNote();}
+  endDaily();
+  if(scoring==="pass"){paintExtras();intro();return;}
+  rookie=e.target.checked;
+  buildPool();
+  try{localStorage.setItem("hm-rookie",rookie?"1":"0");}catch(err){}
+  clearInterval(timer);
+  paintExtras();
+  intro();
+};
+
+/* ---------- Multiplayer: two players, one device, turns alternate every play ---------- */
+function pnpSetup(){
+  if(!dailyDone()) return intro(true);
+  endDaily();
+  pnp=null;paintPnpBar();
+  clearInterval(timer);
+  document.body.classList.remove("indrive");
+  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  paintBoard();
+  let n=["PLAYER 1","PLAYER 2"];
+  try{const s=JSON.parse(localStorage.getItem("hm-pnp")||"null");if(Array.isArray(s)) n=[s[0]||n[0],s[1]||n[1]];}catch(e){}
+  const extras=rk()?"rookies only":"";
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="tier" style="color:var(--chalk)">MULTIPLAYER</div>
+      <div class="rules">Two players, one device. Take turns: one play each, then hand it over.
+        Each of you gets your own seven plays and your own numbers.<br>
+        <b>Fewest plays to a touchdown wins.</b> If nobody scores, most yards wins.<br>
+        Rules from the settings above: <b>${mode.toUpperCase()}</b>, <b>${SCORING[scoring].label}</b>${extras?", "+extras:""}.</div>
+      <div class="pnpnames">
+        <label>FIRST UP<input id="pn1" maxlength="14" value="${esc(n[0])}" autocomplete="off" spellcheck="false"></label>
+        <label>SECOND<input id="pn2" maxlength="14" value="${esc(n[1])}" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="pnpKick">KICK OFF ▸</button>
+        <button class="ghost" id="pnpBack">BACK</button>
+      </div>
+    </div>`;
+  const go=()=>{
+    const a=$("pn1").value.replace(/\s+/g," ").trim().slice(0,14)||"PLAYER 1";
+    let b=$("pn2").value.replace(/\s+/g," ").trim().slice(0,14)||"PLAYER 2";
+    if(b.toLowerCase()===a.toLowerCase()) b+=" 2";
+    try{localStorage.setItem("hm-pnp",JSON.stringify([a,b]));}catch(e){}
+    pnpStart(a,b);
+  };
+  $("pnpKick").onclick=go;
+  $("pnpBack").onclick=()=>intro();
+  $("panel").onkeydown=e=>{if(e.key==="Enter"&&(e.target.id==="pn1"||e.target.id==="pn2")){e.preventDefault();go();}};
+  $("pnpKick").focus();
+}
+function pnpStart(a,b){
+  endDaily();
+  clearInterval(timer);
+  $("panel").onkeydown=null;
+  pnp={p:[a,b].map(name=>({name,yards:0,play:0,used:new Set(),done:false,celebrated:false})),cur:0,slate:makeSlate()};
+  $("log").innerHTML="";
+  pnpLoad(0);
+  pnpHandoff();
+}
+function pnpLoad(i){
+  pnp.cur=i;
+  const s=pnp.p[i];
+  yards=s.yards;play=s.play;used=s.used;slate=pnp.slate;over=false;live=false;paused=false;
+  paintBoard();paintPnpBar();
+}
+function pnpStore(){
+  const s=pnp.p[pnp.cur];
+  s.yards=yards;s.play=play;
+  s.done=s.done||yards>=GOAL||play>=PLAYS;
+}
+// next to play: the other player if they still have plays, else the same player, else nobody (game over)
+function pnpNextIdx(){
+  const o=1-pnp.cur, me=pnp.p[pnp.cur];
+  const meDone=me.done||yards>=GOAL||play>=PLAYS;
+  if(!pnp.p[o].done) return o;
+  return meDone?-1:pnp.cur;
+}
+function pnpNextLabel(){
+  const n=pnpNextIdx();
+  if(n<0) return "SEE WHO WON ▸";
+  if(n!==pnp.cur) return `${yards>=GOAL?"TOUCHDOWN! ":""}PASS TO ${esc(pnp.p[n].name)} ▸`;
+  return yards>=GOAL?"SCORE IT":"NEXT PLAY ▸";
+}
+function pnpAdvance(){
+  pnpStore();
+  const s=pnp.p[pnp.cur];
+  if(s.yards>=GOAL&&!s.celebrated){s.celebrated=true;confetti();sfx("td");}
+  const n=pnpNextIdx();
+  if(n<0) return pnpFinish();
+  if(n!==pnp.cur){pnpLoad(n);return pnpHandoff();}
+  pnpLoad(n);
+  nextPlay();
+}
+function pnpHandoff(){
+  document.body.classList.add("indrive");
+  const s=pnp.p[pnp.cur], o=pnp.p[1-pnp.cur];
+  $("panel").innerHTML=`
+    <div class="res handoff">
+      <div class="dailytag">MULTIPLAYER · HAND IT OVER</div>
+      <div class="big">${esc(s.name)}, YOU'RE UP</div>
+      <div class="num" style="margin-top:10px">Ball on your ${s.yards}. Play ${s.play+1} of ${PLAYS}.<br>
+        ${esc(o.name)}: ${o.yards>=GOAL?`touchdown in ${o.play} play${o.play>1?"s":""}`:`${o.yards} yards after ${o.play} play${o.play===1?"":"s"}`}.</div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="ready">READY ▸</button>
+        <button class="ghost" id="pnpQuit">END GAME</button>
+      </div>
+      <div class="savehint">${clockSecs()?"The clock starts when you tap Ready.":"No clock in Learning mode."}</div>
+    </div>`;
+  $("ready").onclick=()=>nextPlay();
+  $("pnpQuit").onclick=()=>intro();
+  $("ready").focus();
+}
+function pnpFinish(){
+  over=true;live=false;clearInterval(timer);
+  document.body.classList.remove("indrive");
+  const sc=s=>s.yards>=GOAL?200-s.play:s.yards;
+  const [A,B]=pnp.p, a=sc(A), b=sc(B);
+  const win=a===b?-1:a>b?0:1;
+  const line=s=>s.yards>=GOAL?`TD in ${s.play}`:`${s.yards} yd`;
+  const sub=s=>s.yards>=GOAL?`touchdown on play ${s.play}`:`${GOAL-s.yards} short after ${s.play} plays`;
+  paintPnpBar();
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="dailytag">MULTIPLAYER · FINAL</div>
+      <div class="tier" style="color:var(--gold)">${win<0?"IT'S A TIE":esc(pnp.p[win].name)+" WINS"}</div>
+      <div class="vs">${pnp.p.map((s,i)=>`<div class="${i===win?"win":""}"><div class="n">${i===win?"🏆 ":""}${esc(s.name)}</div>
+        <div class="y">${line(s)}</div><small>${sub(s)}</small></div>`).join("")}</div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="rematch">REMATCH ↺</button>
+        <button class="ghost" id="pnpSwap">SWAP WHO GOES FIRST</button>
+        <button class="ghost" id="pnpMenu">MENU</button>
+      </div>
+    </div>`;
+  const names=[A.name,B.name];
+  $("rematch").onclick=()=>pnpStart(names[0],names[1]);
+  $("pnpSwap").onclick=()=>pnpStart(names[1],names[0]);
+  $("pnpMenu").onclick=()=>intro();
+  if(win>=0||A.yards>=GOAL||B.yards>=GOAL) confetti();
+  sfx(win>=0?"td":"stall");
+}
+function paintPnpBar(){
+  const bar=$("pnpBar");
+  if(!pnp){bar.hidden=true;bar.innerHTML="";return;}
+  bar.hidden=false;
+  bar.innerHTML=pnp.p.map((s,i)=>{
+    const y=i===pnp.cur&&!over?yards:s.yards, pl=i===pnp.cur&&!over?play:s.play;
+    return `<div class="${i===pnp.cur&&!over?"on":""}"><span>${esc(s.name)}</span><b>${y>=GOAL?"TD":y+" yd"} · ${pl}/${PLAYS}</b></div>`;
+  }).join("");
+}
+
+/* ---------- owner tools (profile panel): signed in as this name, reset today's Daily or start fresh ---------- */
+const DEV_NAME="joedisney5678";   // compared with spaces and capitals ignored
+const isDev=()=>{const m=me();return !!m&&m.name.toLowerCase().replace(/\s+/g,"")===DEV_NAME;};
+function devResetDaily(){
+  clearInterval(timer);live=false;paused=false;
+  endDaily();
+  const t=todayET();
+  try{localStorage.removeItem(DAILY_KEY);}catch(e){}
+  delete hist[t];saveHist();delete pctMemo[t];
+  closeAcct();closeStats();
+  intro();
+  scrollTo({top:0,behavior:"smooth"});
+}
+// Start fresh: wipe everything this game keeps on the device, as if it had never been opened, then reload
+function devStartFresh(){
+  try{
+    Object.keys(localStorage).filter(k=>k.startsWith("hm-")).forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  location.reload();
+}
+
+loadSave();
+try{localStorage.removeItem("hm-ach-v1");}catch(e){}
+loadHist();
+paintAcct();
+paintMode();
+paintScoring();
+paintExtras();
+paintSound();
+paintFooter();
+paintSuggest();
+intro();
+maybeTutorial();
+refreshData();
+</script>
+</body>
+</html>
