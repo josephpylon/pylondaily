@@ -147,6 +147,7 @@
   .tstep{font-size:9px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px}
   .tbody p{font-size:13px;color:var(--paper);line-height:1.7;margin-bottom:12px}
   .tbody p b{color:var(--chalk)}
+  .tbody a{color:var(--gold)}
   .tbody .tsmall{font-size:11px;color:var(--dim)}
   .tfield{position:relative;height:46px;margin:6px 0 4px;border:2px solid var(--fborder);
     background:repeating-linear-gradient(90deg,var(--turf1) 0 10%,var(--turf2) 10% 20%);overflow:hidden}
@@ -188,6 +189,10 @@
     width:100%;max-width:340px;height:92px;background:var(--input);color:var(--paper);border:2px solid var(--line2);
     font:inherit;font-size:12px;padding:8px;margin-top:10px;resize:none;
   }
+  .nextdaily{margin:14px auto 0;display:inline-flex;flex-direction:column;gap:3px;border:2px solid var(--line);padding:8px 16px;background:var(--surface2)}
+  .nextdaily small{font-size:9px;letter-spacing:.2em;color:var(--dim)}
+  .nextdaily b{font-size:19px;color:var(--chalk);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+  .rules .cd{font-variant-numeric:tabular-nums}
   .dailytag{font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px}
 
   /* ---------- suggestions ---------- */
@@ -306,6 +311,11 @@
     background:repeating-linear-gradient(90deg,rgba(255,255,255,.4) 0 6px,transparent 6px 20px);
   }
   .hashrow.top{top:22%} .hashrow.bot{bottom:22%}
+  /* Multiplayer: a second end zone on the left */
+  .ez.left{left:0;right:auto;border-left:none;border-right:2px solid rgba(255,255,255,.85);display:none}
+  .field.tug .ez.left{display:flex}
+  .field.tug .hashrow{left:12%}
+  .ez span{max-height:100%;overflow:hidden;white-space:nowrap}
   .ball{
     position:absolute;top:50%;transform:translate(-50%,-50%);
     font-size:20px;transition:left .7s cubic-bezier(.22,1,.36,1);
@@ -391,6 +401,9 @@
   .res .num{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.7}
   .res .fixed{font-size:11px;color:var(--cool);margin-top:5px;font-style:italic}
   .res .extra{font-size:11px;color:var(--silver);margin-top:4px;letter-spacing:.06em}
+  .res .tdline{font-size:14px;color:var(--gold);font-weight:700;letter-spacing:.08em;margin-top:8px}
+  .field.scored .ez{box-shadow:inset 0 0 0 2px var(--gold),0 0 14px rgba(245,197,66,.55)}
+  .field.scored .ez span{color:#ffe9a3;font-weight:700}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:99;display:none}
 
   /* ---------- perfect hit ---------- */
@@ -464,7 +477,10 @@
   /* beginner-friendly: no settings until today's Daily is done, and none during any Daily drive */
   body.simple .settings,body.simple .filterrow{display:none}
   /* rookies filter: one quiet checkbox under the bars */
-  .filterrow{display:flex;justify-content:flex-end;margin:-6px 2px 12px}
+  .filterrow{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px 18px;margin:-6px 2px 12px}
+  .filterrow select{background:var(--input);color:var(--paper);border:2px solid var(--line2);font:inherit;font-size:11px;
+    letter-spacing:.04em;padding:4px 6px;max-width:170px}
+  .filterrow select:disabled{opacity:.5}
   .filterrow label{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.14em;color:var(--dim);cursor:pointer}
   .filterrow input{width:14px;height:14px;accent-color:var(--gold);margin:0}
   .filterrow small{color:var(--faint);letter-spacing:.06em}
@@ -615,20 +631,22 @@
     <button data-s="rec">RECEIVING<small>RBs, WRs, TEs</small></button>
     <button data-s="all">ALL<small>pass + rush + catch</small></button>
   </div>
-  <div class="filterrow"><label><input type="checkbox" id="rookieT"> ROOKIES ONLY <small id="rookieNote">2026 class</small></label></div>
+  <div class="filterrow"><label>TEAM <select id="teamSel" aria-label="Team or division"></select> <small id="teamNote"></small></label>
+    <label><input type="checkbox" id="rookieT"> ROOKIES ONLY <small id="rookieNote">2026 class</small></label></div>
 
   <div class="pnpbar" id="pnpBar" hidden></div>
 
   <div class="board">
     <div class="cell"><div class="k">BALL ON</div><div class="v" id="sYd">0</div></div>
     <div class="cell"><div class="k">PLAY</div><div class="v" id="sPlay">1 / 7</div></div>
-    <div class="cell"><div class="k">TO GO</div><div class="v hot" id="sGo">100</div></div>
+    <div class="cell"><div class="k" id="sGoK">TO GO</div><div class="v hot" id="sGo">100</div></div>
   </div>
 
   <div class="field" id="field">
     <div class="hashrow top"></div>
     <div class="hashrow bot"></div>
-    <div class="ez"><span>END ZONE</span></div>
+    <div class="ez"><span id="ezTxt">END ZONE</span></div>
+    <div class="ez left"><span id="ezLTxt"></span></div>
     <div class="ball" id="ball" style="left:2%">🏈</div>
     <div class="gain" id="gain"></div>
   </div>
@@ -676,7 +694,7 @@
     <span id="dataNote"></span><br>
     <span id="dataCount"></span><br>
     Stats: nflverse player data (the same numbers as fantasytools.ai). Not affiliated with the NFL.<br>
-    <a href="about.html">About &amp; privacy</a> · <a href="#suggest" id="sgLink">Send a suggestion</a>
+    <a href="about.html">About &amp; privacy</a> · <a href="patchnotes.html">Patch notes</a> · <a href="#suggest" id="sgLink">Send a suggestion</a>
   </footer>
 </div>
 
@@ -719,6 +737,25 @@ let rookie=false;
 const isRec=()=>scoring==="pass"||scoring==="rush"||scoring==="rec"||scoring==="all";
 // Rookies Only applies everywhere except Passing (too few rookie quarterbacks have played)
 const rk=()=>rookie&&scoring!=="pass";
+// Team filter (free play and Multiplayer): "" = everyone, "KC" = one team, "d:AFC West" = a division.
+// Picking a team switches Rookies Only off, and the other way round.
+let team="";
+const DIVS={"AFC East":["BUF","MIA","NE","NYJ"],"AFC North":["BAL","CIN","CLE","PIT"],"AFC South":["HOU","IND","JAX","TEN"],
+  "AFC West":["DEN","KC","LAC","LV"],"NFC East":["DAL","NYG","PHI","WAS"],"NFC North":["CHI","DET","GB","MIN"],
+  "NFC South":["ATL","CAR","NO","TB"],"NFC West":["ARI","LAR","SEA","SF"]};
+const TEAM_NAMES={ARI:"Cardinals",ATL:"Falcons",BAL:"Ravens",BUF:"Bills",CAR:"Panthers",CHI:"Bears",CIN:"Bengals",CLE:"Browns",
+  DAL:"Cowboys",DEN:"Broncos",DET:"Lions",GB:"Packers",HOU:"Texans",IND:"Colts",JAX:"Jaguars",KC:"Chiefs",LAC:"Chargers",
+  LAR:"Rams",LV:"Raiders",MIA:"Dolphins",MIN:"Vikings",NE:"Patriots",NO:"Saints",NYG:"Giants",NYJ:"Jets",PHI:"Eagles",
+  PIT:"Steelers",SEA:"Seahawks",SF:"49ers",TB:"Buccaneers",TEN:"Titans",WAS:"Commanders"};
+const validTeam=t=>!!(TEAM_NAMES[t]||(t&&t.startsWith("d:")&&DIVS[t.slice(2)]));
+const oneTeam=()=>!!team&&!team.startsWith("d:");
+const teamSet=()=>oneTeam()?[team]:DIVS[team.slice(2)];
+const teamLabel=()=>oneTeam()?TEAM_NAMES[team]:team.slice(2);
+// in force? Not in Passing (too few quarterbacks), and one team has too few runners for Rushing (divisions work)
+const tm=()=>!!team&&scoring!=="pass"&&!(scoring==="rush"&&oneTeam());
+const keep=a=>rk()?a.filter(p=>ROOKIES.has(p[0])):tm()?a.filter(p=>teamSet().includes(p[1])):a;
+const filterTag=()=>rk()?" · ROOKIES":tm()?" · "+teamLabel().toUpperCase():"";
+const filterWords=()=>rk()?"rookies only":tm()?teamLabel()+" only":"";
 // what the number means, in prompts and results
 const unitLong=()=>isRec()?SCORING[scoring].word:SCORING[scoring].word+" points";
 const unitShort=()=>isRec()?"yards":"points";
@@ -759,8 +796,8 @@ function buildPool(){
       EVERY[pos]=rows.map(([n,t,g])=>[n,t,0,+g]);
       ALL[pos]=YDS_POS[m].includes(pos)
         ? rows.filter(r=>!flag||r[6].includes(flag)).map(([n,t,g,py,ry,cy])=>[n,t,Math.round(ydsOf(m,+py,+ry,+cy)/+g*10)/10,+g]) : [];
-      POOL[pos]=rk() ? ALL[pos].filter(p=>ROOKIES.has(p[0])) : ALL[pos];
-      TARGETS[pos]=rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=10)
+      POOL[pos]=keep(ALL[pos]);
+      TARGETS[pos]=tm() ? POOL[pos].filter(p=>p[3]>=2&&p[2]>0) : rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=10)
         : POOL[pos].filter(p=>p[3]>=TARGET_MIN_GAMES).sort((a,b)=>b[2]-a[2]).slice(0,YDS_DEPTH[m][pos]||0);
     }
     return;
@@ -772,10 +809,10 @@ function buildPool(){
       const fix=PG_FIX[n]&&PG_FIX[n][scoring];
       return [n,t,fix!==undefined?fix:Math.round(tot/+g*10)/10,+g];
     });
-    POOL[pos]=rk() ? ALL[pos].filter(p=>ROOKIES.has(p[0])) : ALL[pos];
+    POOL[pos]=keep(ALL[pos]);
     // targets come from regulars, so a play never asks for a one-game cameo's average
     // rookie targets: rookies who have played a few games and score enough to be worth naming
-    TARGETS[pos]=rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=3)
+    TARGETS[pos]=tm() ? POOL[pos].filter(p=>p[3]>=2&&p[2]>0) : rk() ? POOL[pos].filter(p=>p[3]>=3&&p[2]>=3)
       : POOL[pos].filter(p=>p[3]>=TARGET_MIN_GAMES).sort((a,b)=>b[2]-a[2]).slice(0,TARGET_DEPTH[pos]);
   }
 }
@@ -788,10 +825,10 @@ const EXTRAS=["broke a tackle","stiff-arm","spun out of it","extra effort","seco
 // this drive) is ranked by how close his average is to the target, and p is the share of them closer
 // than your answer:
 //   closest possible answer (p = 0)   -> +35
-//   top 40% (p < 0.4)                 -> 35 * (1 - p/0.4)^5, never a loss
+//   top 40% (p < 0.4)                 -> 35 * (1 - p/0.4)^2.5, never a loss
 //   0.4 <= p < 0.75                   -> slides from 0 down to -10
 //   bottom 25% (p >= 0.75)            -> -10
-const SAFE=0.4, CURVE_K=5;
+const SAFE=0.4, CURVE_K=2.5;   // was 5: good-but-not-perfect answers now earn real yards
 function gainFor(pick){
   const pool=allowed.flatMap(pos=>POOL[pos]).filter(x=>!used.has(x[0])||x[0]===pick[0]);
   const d=Math.abs(pick[2]-target);
@@ -841,6 +878,26 @@ const norm=s=>s.toLowerCase().replace(/[.''`-]/g,"")
 
 let yards, play, used, target, slot, allowed, slate, timer, left, over;
 let live=false, paused=false, acList=[], acSel=-1, playT0=0;
+// A touchdown no longer ends the drive: tdPlay is the play it was scored on (0 = not yet), and yards gained past the
+// goal line or on later plays pile up as bonus. Multiplayer is a tug-of-war that counts touchdowns instead.
+let tdPlay=0, bonus=0, celebrated=false;
+function applyGain(gain){
+  if(pnp){yards=Math.max(1,Math.min(GOAL,yards+gain));if(yards>=GOAL) pnp.p[pnp.cur].td++;return;}   // tug-of-war: you can't back into the other end zone
+  if(tdPlay){bonus=Math.max(0,bonus+gain);return;}
+  const tot=yards+gain;
+  if(tot>=GOAL){bonus=tot-GOAL;yards=GOAL;tdPlay=play;}
+  else yards=Math.max(0,tot);   // the ball can't go behind your own goal line
+}
+// the same sums for a saved list of plays
+function tally(plays){
+  let y=0,td=0,b=0;
+  plays.forEach((r,i)=>{
+    if(td){b=Math.max(0,b+r.gain);return;}
+    const t=y+r.gain;
+    if(t>=GOAL){b=t-GOAL;y=GOAL;td=i+1;} else y=Math.max(0,t);
+  });
+  return {yards:y,tdPlay:td,bonus:b};
+}
 let pnp=null;          // Multiplayer (pass-the-device) match in progress
 const $=id=>document.getElementById(id);
 
@@ -852,6 +909,9 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 // Rookies Only skips the QB-only slot: too few rookie quarterbacks have played.
 function makeSlate(){
   const pick=a=>a[Math.floor(Math.random()*a.length)];
+  // one team is a small pool, so every play is a wide slot
+  if(tm()&&oneTeam()) return isRec() ? Array(7).fill("FLEX")
+    : shuffle(["SUPERFLEX","SUPERFLEX","SUPERFLEX","FLEX","FLEX","FLEX","FLEX"]);
   if(scoring==="pass") return Array(7).fill("QB");
   if(scoring==="rush") return shuffle(rk() ? ["RB","RB","RB","RB","RB","SUPERFLEX","SUPERFLEX"]
     : ["RB","RB","RB","QB","SUPERFLEX","SUPERFLEX",pick(["RB","QB","SUPERFLEX"])]);
@@ -866,7 +926,7 @@ function start(){
   if(!dailyDone()) return intro(true);
   endDaily();
   pnp=null;paintPnpBar();
-  yards=0;play=0;used=new Set();over=false;
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;used=new Set();over=false;
   slate=makeSlate();
   $("log").innerHTML="";
   nextPlay();
@@ -879,18 +939,22 @@ function bringPlayIntoView(){
   if(Math.abs(scrollY-y)>4) scrollTo({top:Math.max(0,y),behavior:"smooth"});
 }
 function nextPlay(){
-  if(yards>=GOAL) return finish(true);
-  if(play>=PLAYS)  return finish(false);
+  if(pnp&&yards>=GOAL) return pnpAdvance();
+  if(!pnp&&play>=PLAYS) return finish(yards>=GOAL);
   document.body.classList.add("indrive");
   paintSimple();
   play++;
-  slot=slate[play-1];
+  slot=slate[(play-1)%slate.length];   // Multiplayer has no play limit, so it goes round the slate again
   allowed=SLOTS[slot];
   if(daily){
     target=daily.plan[play-1].target;
     dstate.shown=play;saveDaily();
   }else{
-    const cands=allowed.flatMap(p=>TARGETS[p]).filter(p=>!used.has(p[0]));
+    let cands=allowed.flatMap(p=>TARGETS[p]).filter(p=>!used.has(p[0]));
+    // a small pool (one team, one division) can run out of regulars: ask about anyone still unused
+    if(!cands.length) cands=allowed.flatMap(p=>POOL[p]).filter(p=>!used.has(p[0]));
+    // a long Multiplayer game can use up a small pool: that player may name anyone again
+    if(!cands.length&&pnp){used.clear();cands=allowed.flatMap(p=>TARGETS[p]);if(!cands.length) cands=allowed.flatMap(p=>POOL[p]);}
     if(!cands.length) return finish(yards>=GOAL);
     target=cands[Math.floor(Math.random()*cands.length)][2];
   }
@@ -899,7 +963,7 @@ function nextPlay(){
   $("panel").innerHTML=`
     <div class="plabel">${daily?`DAILY DRIVE #${daily.no}${practice?(daily.date===todayET()?" REPLAY (DOESN'T COUNT)":" · REPLAY (DOESN'T COUNT)"):""} · `
       :pnp?`MULTIPLAYER · ${esc(pnp.p[pnp.cur].name)} · `
-      :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${rk()?" · ROOKIES":""} · </span>`}PLAY ${play} OF ${PLAYS}</div>
+      :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${filterTag()} · </span>`}PLAY ${play}${pnp?"":` OF ${PLAYS}`}</div>
     <div class="prompt">Name a ${pill} averaging closest to
       <b>${target.toFixed(1)}</b> ${unitLong()} per game this season.</div>
     ${slotHint(slot)?`<div class="hint">${slotHint(slot)}</div>`:""}
@@ -956,13 +1020,26 @@ function todayET(){
   }catch(e){return new Date(Date.now()-DAILY_HOUR*36e5).toISOString().slice(0,10);}
 }
 const dailyNo=d=>Math.round((Date.parse(d+"T00:00:00Z")-Date.parse(DAILY_EPOCH+"T00:00:00Z"))/864e5)+1;
-function nextDailyIn(){
+// live countdown to the next Daily: every <b class="cd"> on screen is repainted once a second
+function nextDailySecs(){
   try{
     const t=etParts(), now=t.h*60+t.mi, at=DAILY_HOUR*60;
-    const mins=now<at ? at-now : 1440-now+at;
-    return Math.floor(mins/60)+"h "+(mins%60)+"m";
-  }catch(e){return "";}
+    return (now<at ? at-now : 1440-now+at)*60-new Date().getSeconds();
+  }catch(e){return -1;}
 }
+function paintCd(){
+  const n=nextDailySecs(), z=v=>String(v).padStart(2,"0");
+  const txt=n<0?"":`${Math.floor(n/3600)}h ${z(Math.floor(n/60)%60)}m ${z(n%60)}s`;
+  document.querySelectorAll(".cd").forEach(el=>{el.textContent=txt;});
+}
+let cdDay="";
+setInterval(()=>{
+  paintCd();
+  // 5 a.m. Eastern just passed with the start or result screen open: show the new Daily
+  const d=todayET();
+  if(cdDay&&d!==cdDay&&!live&&!paused&&!pnp&&(over||play===0)) intro();
+  cdDay=d;
+},1000);
 // small seeded generator, so one date always deals the same drive
 function seeded(str){
   let h=1779033703^str.length;
@@ -1003,9 +1080,9 @@ function saveDaily(){if(practice) return;try{localStorage.setItem(DAILY_KEY,JSON
 let practice=false;
 // the Daily's fixed rules: Standard clock, Full PPR, full player pool. The player's own settings come back after.
 function enterDailyRules(){
-  prefs={mode,scoring,rookie};
-  const rebuild=scoring!=="ppr"||rookie;
-  mode="standard";scoring="ppr";rookie=false;
+  prefs={mode,scoring,rookie,team};
+  const rebuild=scoring!=="ppr"||rookie||!!team;
+  mode="standard";scoring="ppr";rookie=false;team="";
   if(rebuild) buildPool();
   paintMode();paintScoring();paintExtras();
 }
@@ -1023,7 +1100,7 @@ function replayDaily(date){
   practice=true;
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
   dstate={date,plays:[],shown:0,done:false};
-  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;used=new Set();over=false;live=false;paused=false;
   $("log").innerHTML="";
   slate=daily.plan.map(p=>p.slot);
   nextPlay();
@@ -1032,8 +1109,8 @@ function endDaily(){
   if(!daily) return;
   daily=null;dstate=null;practice=false;
   if(prefs){
-    const rebuild=prefs.scoring!==scoring||prefs.rookie!==rookie;
-    mode=prefs.mode;scoring=prefs.scoring;rookie=prefs.rookie;
+    const rebuild=prefs.scoring!==scoring||prefs.rookie!==rookie||(prefs.team||"")!==team;
+    mode=prefs.mode;scoring=prefs.scoring;rookie=prefs.rookie;team=prefs.team||"";
     if(rebuild) buildPool();
     prefs=null;paintMode();paintScoring();paintExtras();
   }
@@ -1045,7 +1122,7 @@ function startDaily(){
   enterDailyRules();
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
   dstate=loadDaily()||{date,plays:[],shown:0,done:false};
-  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;used=new Set();over=false;live=false;paused=false;
   $("log").innerHTML="";
   slate=daily.plan.map(p=>p.slot);
   // a play left on screen when the page was closed counts as no answer
@@ -1054,12 +1131,14 @@ function startDaily(){
     dstate.plays.push({slot:pl.slot,target:pl.target,name:null,avg:null,diff:null,pct:null,best:false,gain:-10,tier:"DELAY OF GAME"});
   }
   for(const r of dstate.plays){
-    play++;yards=Math.max(0,Math.min(GOAL,yards+r.gain));
+    play++;applyGain(r.gain);
     if(r.name) used.add(r.name);
     logLine(play,r.slot,r.name,r.avg,r.target,r.tier,r.gain);
   }
   saveDaily();
+  celebrated=!!tdPlay;
   if(dstate.done) return finish(yards>=GOAL,true);
+  if(tdPlay&&play<PLAYS) return tdChoice();
   nextPlay();
 }
 function dailyEmoji(){
@@ -1068,11 +1147,17 @@ function dailyEmoji(){
 function shareText(){
   const n=dstate.plays.length, td=yards>=GOAL;
   return `🏈 Pylon Daily #${daily.no}\n`+
-    (td?`TOUCHDOWN in ${n} play${n>1?"s":""}`:`${yards} yards in ${n} plays`)+
-    `\n${dailyEmoji()}`+(SHARE_URL?`\n${SHARE_URL}`:"");
+    (td?`TOUCHDOWN in ${tdPlay} play${tdPlay>1?"s":""}`+(bonus?` · +${bonus} bonus yards`:""):`${yards} yards in ${n} plays`)+
+    `\n${dailyEmoji()}`+(streaks().cur>=2?`\n🔥 ${streaks().cur}-day streak`:"")+(SHARE_URL?`\n${SHARE_URL}`:"");
 }
-async function shareDaily(){
-  const text=shareText(), msg=$("shareMsg");
+// a dare to send to one person: the result in words, no spoilers, and the link
+function challengeText(){
+  const td=yards>=GOAL;
+  return `🏈 I ${td?`scored a TOUCHDOWN in ${tdPlay} play${tdPlay>1?"s":""}`+(bonus?` (+${bonus} bonus yards)`:""):`drove ${yards} yards`}`+
+    ` on Pylon Daily #${daily.no}. Can you beat me?\nhttps://pylondaily.com`;
+}
+async function shareDaily(t){
+  const text=typeof t==="string"?t:shareText(), msg=$("shareMsg");
   try{
     if(navigator.share&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){await navigator.share({text});return;}
   }catch(e){if(e&&e.name==="AbortError") return;}
@@ -1186,7 +1271,7 @@ $("sgLink").addEventListener("click",e=>{
 const TUT_KEY="hm-tutorial-v1";
 let tutStep=0;
 const TUT=[
-  {t:"WELCOME TO PYLON DAILY",b:`<p>A fantasy football guessing game. You have <b>7 plays</b> to drive the ball <b>100 yards</b> for a touchdown.</p>
+  {t:"WELCOME TO PYLON DAILY",b:`<p>A fantasy football guessing game. You have <b>7 plays</b> to drive the ball <b>100 yards</b> for a touchdown. Score early and you can <b>keep going</b>: extra yards count as a bonus.</p>
      <div class="tfield"><i class="tball">🏈</i><span class="tez">END ZONE</span></div>`},
   {t:"EACH PLAY ASKS FOR A NUMBER",b:`<p>You get a lineup slot and a points-per-game number. Name the player whose season average is <b>closest</b> to it.</p>
      <div class="tcard"><small>PLAY 3 OF 7</small>Name a <span class="pos-pill">WR</span> averaging closest to <b>15.6</b> PPR points per game this season.</div>
@@ -1211,17 +1296,31 @@ const TUT=[
        <div><span class="key">☾</span><span><b>Theme:</b> dark, light or Christmas. The same menu turns <b>sound</b> on or off (and string lights in Christmas).</span></div>
      </div>`},
   {t:"ONE DAILY DRIVE",b:`<p>Every day at 5 a.m. Eastern there's one <b>Daily Drive</b>: the same seven plays for everyone, Full PPR scoring, 25 seconds a play, one try.</p>
-     <p>Finish it, then <b>share your result</b> and see how your friends did.</p>`},
+     <p>When you finish, the result screen has:</p>
+     <div class="tkeys">
+       <div><span class="key">📤</span><span><b>Share result:</b> a spoiler-free emoji grid of your drive, with your streak.</span></div>
+       <div><span class="key">🤝</span><span><b>Challenge a friend:</b> sends your score with a dare and the link.</span></div>
+       <div><span class="key">🔥</span><span><b>Your streak</b>, and how many of today's players you beat.</span></div>
+       <div><span class="key">⏱</span><span><b>A countdown</b> to the next Daily Drive.</span></div>
+     </div>`},
   {t:"AFTER THE DAILY",b:`<p>Finishing the Daily unlocks <b>unlimited free play</b>, plus settings above the field:</p>
      <div class="tkeys">
        <div><span class="key">MODE</span><span><b>Standard</b> (25 s a play), <b>Speed</b> (5 s) or <b>Learning</b> (no clock, averages shown in the player pool).</span></div>
        <div><span class="key">FANTASY</span><span>Fantasy points per game: <b>Full PPR</b>, <b>Half PPR</b> or <b>Standard</b>.</span></div>
        <div><span class="key">YARDS</span><span>Yards per game instead: <b>Passing</b>, <b>Rushing</b>, <b>Receiving</b>, or <b>All</b> (all three added up).</span></div>
+       <div><span class="key">TEAM</span><span><b>Team:</b> only players from one team or one division.</span></div>
        <div><span class="key">☑</span><span><b>Rookies only:</b> just this year's rookie class.</span></div>
-       <div><span class="key">👥</span><span><b>Multiplayer:</b> two players on one phone, taking turns.</span></div>
+       <div><span class="key">👥</span><span><b>Multiplayer:</b> a tug-of-war for two on one phone. Score touchdowns for as long as you like.</span></div>
        <div><span class="key">↺</span><span><b>Redo the Daily</b> or play <b>yesterday's</b>, just for fun; they don't count.</span></div>
-     </div>
-     <p class="tsmall">At the bottom of the page: the player pool, and a box to send us ideas.</p>`}
+     </div>`},
+  {t:"THE BOTTOM OF THE PAGE",b:`<p>Scroll down past the field for the rest of the site.</p>
+     <div class="tkeys">
+       <div><span class="key">📋</span><span><b>Player pool:</b> every player you can name. In Learning mode it shows their averages.</span></div>
+       <div><span class="key">📝</span><span><b>Play by play:</b> each answer you gave this drive and what it earned.</span></div>
+       <div><span class="key">💡</span><span><b>Send a suggestion:</b> ideas, bugs or a number that looks wrong go straight to the developer.</span></div>
+       <div><span class="key">ℹ</span><span><b>About &amp; privacy:</b> where the stats come from and what the game saves (almost nothing).</span></div>
+       <div><span class="key">🆕</span><span><b><a href="patchnotes.html">Patch notes</a>:</b> every update to the game, newest first. The link is at the very bottom of the page.</span></div>
+     </div>`}
 ];
 function paintTut(){
   const s=TUT[tutStep], last=tutStep===TUT.length-1;
@@ -1333,8 +1432,8 @@ function recordDrive(scored){
   if(m){
     const s=m.stats;
     s.drives++;
-    if(scored){s.tds++;if(!s.fewest||play<s.fewest) s.fewest=play;}
-    if(yards>s.best) s.best=yards;
+    if(scored){s.tds++;const n=tdPlay||play;if(!s.fewest||n<s.fewest) s.fewest=n;}
+    if(yards+bonus>s.best) s.best=yards+bonus;
     const mk=daily?"daily":mode;
     const md=s.modes[mk]||(s.modes[mk]={drives:0,tds:0});
     md.drives++;if(scored) md.tds++;
@@ -1398,9 +1497,7 @@ function paintAcct(){
     <label class="toggle"><input type="checkbox" id="shareT" ${save.share?"checked":""}>
       <span>Save anonymous play data. For each play it records the mode, the slot, the target number,
         the player picked, how far off it was, yards gained and seconds used. Your profile name is never included.</span></label>
-    <div class="savehint">${TELEMETRY_URL
-        ? "Sent at the end of each drive."
-        : `This game is not connected to a server yet, so nothing is sent: records stay on this device until you copy them out. ${save.plays.length} play${save.plays.length===1?"":"s"} stored.`}</div>
+    ${TELEMETRY_URL?`<div class="savehint">Sent at the end of each drive.</div>`:""}
     <div class="row">
       <button class="ghost small" id="shareShow">SHOW DATA</button>
       <button class="ghost small" id="shareClear">CLEAR DATA</button>
@@ -1463,7 +1560,7 @@ function intro(nudge){
   if(pendingData){const d=pendingData;pendingData=null;applyData(d);}
   pnp=null;paintPnpBar();
   document.body.classList.remove("indrive");
-  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;used=new Set();over=false;live=false;paused=false;
   paintBoard();drawPool();
   const today=todayET(), no=dailyNo(today), saved=loadDaily(), done=!!(saved&&saved.done);
   const dLabel = done ? `DAILY #${no} RESULT` : saved&&saved.shown ? `RESUME DAILY DRIVE #${no} ▸` : `PLAY DAILY DRIVE #${no} ▸`;
@@ -1473,9 +1570,9 @@ function intro(nudge){
       <div class="tier" style="color:var(--chalk)">${done?"FREE PLAY UNLOCKED":"TODAY'S DRIVE"}</div>
       <div class="rules">
         ${done
-          ? `Daily Drive #${no} is done. Free play is open: <b>${SCORING[scoring].label}</b>${rk()?", <b>rookies only</b>":""}, ${free}.
+          ? `Daily Drive #${no} is done. Free play is open: <b>${SCORING[scoring].label}</b>${filterWords()?`, <b>${filterWords()}</b>`:""}, ${free}.
              Change the mode and scoring above.<br>
-             Next Daily Drive${nextDailyIn()?` in ${nextDailyIn()}`:" at 5 a.m. Eastern"}.`
+             Next Daily Drive in <b class="cd"></b>.`
           : `<b>Daily Drive #${no}</b>: the same seven plays for everyone today, Full PPR scoring,
              25 seconds a play, one try.<br>
              Finish it to unlock <b>unlimited free play</b>.`}
@@ -1504,7 +1601,7 @@ function intro(nudge){
   $("go").onclick=start;
   $("pnpGo").onclick=pnpSetup;
   $("howLink").onclick=openTut;
-  paintSimple();
+  paintSimple();paintCd();
   (done?$("go"):$("dailyGo")).focus();
 }
 
@@ -1710,6 +1807,10 @@ function submit(){
     const v=find(raw,ALL);
     if(v&&!v.many) return nudge(`${v.p[0]} isn't a rookie. Rookies Only uses the 2026 rookie class.`);
   }
+  if(!hit&&tm()){
+    const v=find(raw,ALL);
+    if(v&&!v.many) return nudge(`${v.p[0]} plays for ${v.p[1]}. This drive is ${teamLabel()} only.`);
+  }
   if(!hit&&isRec()){
     const v=find(raw,EVERY);
     if(v&&!v.many) return nudge(`${v.p[0]} isn't in ${SCORING[scoring].label}: it's ${SCORING[scoring].who} only.`);
@@ -1754,13 +1855,13 @@ function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
       pct:rk?+rk.pct.toFixed(4):null,best,gain,tier});
     saveDaily();
   }
-  const before=yards;
-  // the ball can't go behind your own goal line
-  yards=Math.max(0,Math.min(GOAL,yards+gain));
+  const before=yards, hadTd=!!tdPlay;
+  applyGain(gain);
+  const justTd=!hadTd&&!!tdPlay, more=!pnp&&!!tdPlay&&play<PLAYS;
   paintBoard();
   if(gain!==0){
     const g=$("gain");
-    g.style.left=Math.min(88,2+before*.86)+"%";
+    g.style.left=Math.max(6,Math.min(88,fieldX(before)))+"%";
     g.textContent=(gain>0?"+":"")+gain;
     g.style.color=gain>0?"":"var(--hot)";
     g.classList.add("show");
@@ -1779,29 +1880,50 @@ function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
              off by ${diff.toFixed(1)} ${unitShort()}</div>`
           :`<div class="num" style="margin-top:14px">${blurb}</div>`}
       <div class="yds" style="${gain<0?"color:var(--hot)":""}">${gain>0?"+"+gain+" YARDS":gain<0?`LOSS OF ${-gain}`:"NO GAIN"}</div>
+      ${justTd?`<div class="tdline">TOUCHDOWN on play ${tdPlay}!${bonus?` +${bonus} bonus yards`:""}</div>`
+        :hadTd&&!pnp?`<div class="tdline">Bonus yards: +${bonus}</div>`
+        :pnp&&yards>=GOAL?`<div class="tdline">TOUCHDOWN for ${esc(pnp.p[pnp.cur].name)}! The ball goes back to midfield.</div>`:""}
       ${extra?`<div class="extra">${extra}</div>`:""}
       ${revealHTML(top,p)}
       <div class="entry" style="justify-content:center">
-        <button id="nx">${pnp?pnpNextLabel():yards>=GOAL?"SCORE IT":play>=PLAYS?"SEE THE DRIVE":"NEXT PLAY ▸"}</button>
+        <button id="nx">${pnp?pnpNextLabel():play>=PLAYS?"SEE THE DRIVE":more?"KEEP GOING: BONUS YARDS ▸":"NEXT PLAY ▸"}</button>
+        ${more?`<button class="ghost" id="fin">FINISH DRIVE</button>`:""}
         ${yards<GOAL&&play<PLAYS&&(!daily||practice)&&!pnp?`<button class="ghost" id="restart">↺ RESTART</button>`:""}
       </div>
     </div>`;
   $("nx").onclick=pnp?pnpAdvance:nextPlay;
+  if($("fin")) $("fin").onclick=()=>finish(true);
   if($("restart")) $("restart").onclick=restart;
   $("nx").focus();
   if(perfect) sparkle();
-  setTimeout(()=>sfx(!p?"whistle":best?"house":gain>0?"gain":gain===0?"zero":"loss",gain),110);
+  if(justTd||(pnp&&yards>=GOAL)){celebrated=true;confetti();setTimeout(()=>sfx("td"),110);}
+  else setTimeout(()=>sfx(!p?"whistle":best?"house":gain>0?"gain":gain===0?"zero":"loss",gain),110);
   logLine(play,slot,p?p[0]:null,p?p[2]:null,target,tier,gain);
   drawPool();
-  if(!practice){
-  }
+}
+
+// reopened the Daily after scoring with plays still left: offer the same choice again
+function tdChoice(){
+  document.body.classList.add("indrive");paintSimple();paintBoard();
+  const left=PLAYS-play;
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="tier" style="color:var(--gold)">TOUCHDOWN</div>
+      <div class="num" style="margin-top:14px">You scored on play ${tdPlay}${bonus?` with +${bonus} bonus yards`:""}.<br>
+        ${left} play${left>1?"s":""} left: keep going for bonus yards, or finish here.</div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="nx">KEEP GOING: BONUS YARDS ▸</button>
+        <button class="ghost" id="fin">FINISH DRIVE</button>
+      </div>
+    </div>`;
+  $("nx").onclick=nextPlay;$("fin").onclick=()=>finish(true);$("nx").focus();
 }
 
 function finish(scored,replay){
-  if(pnp){pnp.p[pnp.cur].done=true;return pnpAdvance();}
+  if(pnp){pnpStore();return pnpFinish();}
   over=true;live=false;paused=false;clearInterval(timer);
   paintSimple();
-  $("rookieT").disabled=scoring==="pass";
+  $("rookieT").disabled=$("teamSel").disabled=scoring==="pass";
   document.body.classList.remove("indrive");
   paintBoard();
   if(!replay){
@@ -1809,12 +1931,12 @@ function finish(scored,replay){
     if(daily){dstate.done=true;saveDaily();}
     if(daily&&!practice) recordHist(dstate);
     paintSimple();
-    if(scored) confetti();
-    sfx(scored?"td":"stall");
+    if(scored&&!celebrated){confetti();sfx("td");}
+    else if(!scored) sfx("stall");
   }
   const head=`<div class="tier" style="color:${scored?"var(--gold)":"var(--hot)"}">${scored?"TOUCHDOWN":"DRIVE STALLED"}</div>
       <div class="num" style="margin-top:14px">
-        ${scored?`You covered 100 yards in ${play} play${play>1?"s":""}.`
+        ${scored?`You covered 100 yards in ${tdPlay||play} play${(tdPlay||play)>1?"s":""}.`+(bonus?`<br><b style="color:var(--gold)">+${bonus} bonus yards</b>`:"")
                 :`You moved the ball ${yards} yards. ${GOAL-yards} short.`}</div>`;
   const hint=`<div class="savehint">${me()?`Saved to ${esc(me().name)}'s profile.`:"Sign in (top left) to keep your record and stats."}</div>`;
   if(daily&&practice){
@@ -1841,7 +1963,6 @@ function finish(scored,replay){
     return;
   }
   if(daily){
-    const wait=nextDailyIn();
     $("panel").innerHTML=`
     <div class="res">
       <div class="dailytag">DAILY DRIVE #${daily.no} · ${daily.date}</div>
@@ -1849,6 +1970,7 @@ function finish(scored,replay){
       <div class="emoji" aria-label="Play by play accuracy">${dailyEmoji()}</div>
       <div class="legend">🟪 closest possible · 🟩 20+ yds · 🟨 10+ · 🟧 1+ · 🟥 lost yards · ⬛ no answer</div>
       <div class="subline">${streakText()}<span class="pct-today${streakText()?"":" solo"}"></span></div>
+      <div class="nextdaily"><small>NEXT DAILY DRIVE IN</small><b class="cd"></b></div>
       <div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="shareBtn">SHARE RESULT</button>
         <button class="ghost" id="free">FREE PLAY ▸</button>
@@ -1856,12 +1978,15 @@ function finish(scored,replay){
       <div class="savehint" id="shareMsg" aria-live="polite"></div>
       <textarea class="sharebox" id="shareBox" readonly hidden aria-label="Result to share"></textarea>
       <div class="links">
+        <button class="linkbtn" id="challenge">Challenge a friend</button>
         <button class="linkbtn" id="statsGo">Stats</button>
         <button class="linkbtn" id="redo">Redo the Daily</button>
       </div>
-      <div class="savehint">${wait?`Next Daily Drive in ${wait}. `:""}${me()?`Saved to ${esc(me().name)}'s profile.`:""}</div>
+      <div class="savehint">${me()?`Saved to ${esc(me().name)}'s profile.`:""}</div>
     </div>`;
-    $("shareBtn").onclick=shareDaily;
+    paintCd();
+    $("shareBtn").onclick=()=>shareDaily();
+    $("challenge").onclick=()=>shareDaily(challengeText());
     $("statsGo").onclick=openStats;
     $("redo").onclick=redoDaily;
     $("free").onclick=intro;
@@ -1881,9 +2006,13 @@ function finish(scored,replay){
 
 function paintBoard(){
   $("sYd").textContent=yards;
-  $("sPlay").textContent=`${Math.min(play,PLAYS)} / ${PLAYS}`;
-  $("sGo").textContent=Math.max(0,GOAL-yards);
-  $("ball").style.left=Math.min(92,2+yards*.86)+"%";
+  $("sPlay").textContent=pnp?play:`${Math.min(play,PLAYS)} / ${PLAYS}`;
+  const inBonus=!pnp&&!!tdPlay;
+  $("sGoK").textContent=inBonus?"BONUS":"TO GO";
+  $("sGo").textContent=inBonus?"+"+bonus:Math.max(0,GOAL-yards);
+  $("ezTxt").textContent=pnp?pnp.p[0].name.toUpperCase().slice(0,8):inBonus?"BONUS":"END ZONE";
+  $("field").classList.toggle("scored",inBonus);
+  $("ball").style.left=(inBonus?91:pnp?(yards>=GOAL?(pnp.cur===0?94:6):Math.max(5,Math.min(95,fieldX(yards)))):Math.min(92,2+yards*.86))+"%";
   if(pnp) paintPnpBar();
 }
 
@@ -1995,7 +2124,7 @@ function paintMode(){
     b.setAttribute("aria-pressed",b.dataset.m===mode);
   });
   $("poolBox").querySelector("summary").textContent =
-    "SHOW THE PLAYER POOL"+(rk()?" · ROOKIES":"")+(mode==="learning"?" · WITH AVERAGES":"");
+    "SHOW THE PLAYER POOL"+filterTag()+(mode==="learning"?" · WITH AVERAGES":"");
 }
 // switching mode always goes back to the start screen, so one drive is played under one set of rules
 /* ---------- Home: leave any game (free play, Multiplayer, replays) and go back to the start screen ---------- */
@@ -2047,6 +2176,7 @@ function setScoring(v){
 }
 for(const id of ["scoringBar","yardsBar"]) $(id).onclick=e=>{const b=e.target.closest("[data-s]"); if(b) setScoring(b.dataset.s);};
 try{rookie=localStorage.getItem("hm-rookie")==="1";localStorage.removeItem("hm-hints");}catch(e){}
+try{const t=localStorage.getItem("hm-team")||""; if(validTeam(t)){team=t;rookie=false;}}catch(e){}
 try{const v=localStorage.getItem("hm-scoring"); if(SCORING[v]) scoring=v;}catch(e){}
 buildPool();
 try{const m=localStorage.getItem("hm-mode"); if(MODES[m]) mode=m;}catch(e){}
@@ -2148,15 +2278,22 @@ function sparkle(){
   })();
 }
 
-// yard markers
-(function(){
+// Where a yard line sits across the field, in %. Solo: one end zone on the right. Multiplayer: an end zone at each end,
+// and `y` is the current player's own progress, so it is flipped for the player driving left.
+const fieldX=y=>pnp?12+pnpProg(pnp.cur,y)*.76:2+y*.86;
+// yard markers; Multiplayer numbers them like a real field (10 20 30 40 50 40 30 20 10)
+function drawMarks(tug){
   const f=$("field");
-  for(let y=10;y<=80;y+=10){
-    const x=2+y*.86;
+  if(f.dataset.tug===String(tug)) return;
+  f.dataset.tug=String(tug);f.classList.toggle("tug",tug);
+  f.querySelectorAll(".yard,.ynum").forEach(e=>e.remove());
+  for(let y=10;y<=(tug?90:80);y+=10){
+    const x=tug?12+y*.76:2+y*.86;
     const l=document.createElement("div");l.className="yard"+(y===50?" five":"");l.style.left=x+"%";f.appendChild(l);
-    const n=document.createElement("div");n.className="ynum";n.style.left=x+"%";n.textContent=y;f.appendChild(n);
+    const n=document.createElement("div");n.className="ynum";n.style.left=x+"%";n.textContent=tug&&y>50?100-y:y;f.appendChild(n);
   }
-})();
+}
+drawMarks(false);
 
 /* ---------- closest answers ---------- */
 // eligible players nearest the target; the answer given (if any) sorts first among ties
@@ -2247,12 +2384,10 @@ function loadHist(){
 function saveHist(){try{localStorage.setItem(HIST_KEY,JSON.stringify(hist));}catch(e){}}
 function recordHist(st,quiet){
   if(!st||!st.date) return;
-  const y=st.plays.reduce((a,r)=>Math.max(0,Math.min(GOAL,a+r.gain)),0);
+  const t=tally(st.plays), y=t.yards;
   const old=hist[st.date]||{};
-  hist[st.date]={td:y>=GOAL,plays:st.plays.length,yards:y,hc:st.plays.filter(r=>r.best).length,posted:!!old.posted};
+  hist[st.date]={td:y>=GOAL,plays:t.tdPlay||st.plays.length,yards:y,bonus:t.bonus,hc:st.plays.filter(r=>r.best).length,posted:!!old.posted};
   saveHist();
-  const {cur}=streaks();
-
 }
 // a day streak: Dailies finished on back-to-back days, still alive if the last one was today or yesterday
 function streaks(){
@@ -2369,42 +2504,69 @@ function paintExtras(){
   // locked while the Daily's own rules are in force, and not used by Passing
   $("rookieT").disabled=!!prefs||scoring==="pass";
   $("rookieNote").textContent=scoring==="pass"&&!prefs?"not used in Passing":"2026 class";
+  const ts=$("teamSel");
+  ts.value=prefs?"":team;
+  ts.disabled=!!prefs||scoring==="pass";
+  $("teamNote").textContent=prefs||!team?"":scoring==="pass"?"not used in Passing":scoring==="rush"&&oneTeam()?"divisions only in Rushing":"";
   paintMode();
 }
+// team picker: everyone, the eight divisions, then the 32 teams
+$("teamSel").innerHTML=`<option value="">ALL TEAMS</option><optgroup label="Divisions">`+
+  Object.keys(DIVS).map(d=>`<option value="d:${d}">${d}</option>`).join("")+`</optgroup><optgroup label="Teams">`+
+  Object.keys(TEAM_NAMES).sort((a,b)=>TEAM_NAMES[a].localeCompare(TEAM_NAMES[b])).map(t=>`<option value="${t}">${TEAM_NAMES[t]}</option>`).join("")+`</optgroup>`;
+$("teamSel").onchange=e=>{
+  if(daily&&!over){e.target.value=team;return lockedNote();}
+  endDaily();
+  team=validTeam(e.target.value)?e.target.value:"";
+  if(team) rookie=false;
+  try{localStorage.setItem("hm-team",team);localStorage.setItem("hm-rookie",rookie?"1":"0");}catch(err){}
+  buildPool();
+  clearInterval(timer);
+  paintExtras();
+  intro();
+};
 $("rookieT").onchange=e=>{
   if(daily&&!over){e.target.checked=rookie;return lockedNote();}
   endDaily();
   if(scoring==="pass"){paintExtras();intro();return;}
   rookie=e.target.checked;
+  if(rookie) team="";
   buildPool();
-  try{localStorage.setItem("hm-rookie",rookie?"1":"0");}catch(err){}
+  try{localStorage.setItem("hm-rookie",rookie?"1":"0");localStorage.setItem("hm-team",team);}catch(err){}
   clearInterval(timer);
   paintExtras();
   intro();
 };
 
-/* ---------- Multiplayer: two players, one device, turns alternate every play ---------- */
+/* ---------- Multiplayer: a tug-of-war for two on one device ----------
+   One ball, starting at midfield. Player 1 drives right, player 2 drives left, one play each in turn.
+   pnp.pos is the ball's spot from 0 (player 2's end zone, left) to 100 (player 1's, right). While a player is up,
+   `yards` is their own progress toward their end zone, so the rest of the game works unchanged. */
+const pnpProg=(i,pos)=>i===0?pos:100-pos;
+const pnpPos=()=>!pnp?50:pnpProg(pnp.cur,yards);   // where the ball is right now
 function pnpSetup(){
   if(!dailyDone()) return intro(true);
   endDaily();
   pnp=null;paintPnpBar();
   clearInterval(timer);
   document.body.classList.remove("indrive");
-  yards=0;play=0;used=new Set();over=false;live=false;paused=false;
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;used=new Set();over=false;live=false;paused=false;
   paintBoard();
   let n=["PLAYER 1","PLAYER 2"];
   try{const s=JSON.parse(localStorage.getItem("hm-pnp")||"null");if(Array.isArray(s)) n=[s[0]||n[0],s[1]||n[1]];}catch(e){}
-  const extras=rk()?"rookies only":"";
+  const extras=filterWords();
   $("panel").innerHTML=`
     <div class="res">
       <div class="tier" style="color:var(--chalk)">MULTIPLAYER</div>
-      <div class="rules">Two players, one device. Take turns: one play each, then hand it over.
-        Each of you gets your own seven plays and your own numbers.<br>
-        <b>Fewest plays to a touchdown wins.</b> If nobody scores, most yards wins.<br>
+      <div class="rules">A tug-of-war for two on one device. The ball starts at <b>midfield</b>.
+        One of you drives it right, the other left, one play each in turn.<br>
+        Good answers push the ball your way; bad ones give ground.
+        <b>Reach your end zone for a touchdown</b>, then the ball goes back to midfield and you keep going.<br>
+        Play as long as you like, then end the game to see who scored more. You always get the same number of plays each.<br>
         Rules from the settings above: <b>${mode.toUpperCase()}</b>, <b>${SCORING[scoring].label}</b>${extras?", "+extras:""}.</div>
       <div class="pnpnames">
-        <label>FIRST UP<input id="pn1" maxlength="14" value="${esc(n[0])}" autocomplete="off" spellcheck="false"></label>
-        <label>SECOND<input id="pn2" maxlength="14" value="${esc(n[1])}" autocomplete="off" spellcheck="false"></label>
+        <label>GOES FIRST · DRIVES RIGHT ▶<input id="pn1" maxlength="14" value="${esc(n[0])}" autocomplete="off" spellcheck="false"></label>
+        <label>◀ DRIVES LEFT<input id="pn2" maxlength="14" value="${esc(n[1])}" autocomplete="off" spellcheck="false"></label>
       </div>
       <div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="pnpKick">KICK OFF ▸</button>
@@ -2427,7 +2589,7 @@ function pnpStart(a,b){
   endDaily();
   clearInterval(timer);
   $("panel").onkeydown=null;
-  pnp={p:[a,b].map(name=>({name,yards:0,play:0,used:new Set(),done:false,celebrated:false})),cur:0,slate:makeSlate()};
+  pnp={p:[a,b].map(name=>({name,play:0,td:0,used:new Set()})),cur:0,slate:makeSlate(),pos:50};
   $("log").innerHTML="";
   pnpLoad(0);
   pnpHandoff();
@@ -2435,74 +2597,61 @@ function pnpStart(a,b){
 function pnpLoad(i){
   pnp.cur=i;
   const s=pnp.p[i];
-  yards=s.yards;play=s.play;used=s.used;slate=pnp.slate;over=false;live=false;paused=false;
+  yards=pnpProg(i,pnp.pos);play=s.play;tdPlay=0;bonus=0;celebrated=false;used=s.used;slate=pnp.slate;over=false;live=false;paused=false;
   paintBoard();paintPnpBar();
 }
 function pnpStore(){
-  const s=pnp.p[pnp.cur];
-  s.yards=yards;s.play=play;
-  s.done=s.done||yards>=GOAL||play>=PLAYS;
+  pnp.pos=yards>=GOAL?50:pnpPos();   // after a touchdown the ball goes back to midfield
+  pnp.p[pnp.cur].play=play;
 }
-// next to play: the other player if they still have plays, else the same player, else nobody (game over)
-function pnpNextIdx(){
-  const o=1-pnp.cur, me=pnp.p[pnp.cur];
-  const meDone=me.done||yards>=GOAL||play>=PLAYS;
-  if(!pnp.p[o].done) return o;
-  return meDone?-1:pnp.cur;
-}
+const pnpScore=()=>pnp.p.map(s=>`${esc(s.name)} ${s.td}`).join(" · ");
 function pnpNextLabel(){
-  const n=pnpNextIdx();
-  if(n<0) return "SEE WHO WON ▸";
-  if(n!==pnp.cur) return `${yards>=GOAL?"TOUCHDOWN! ":""}PASS TO ${esc(pnp.p[n].name)} ▸`;
-  return yards>=GOAL?"SCORE IT":"NEXT PLAY ▸";
+  return (yards>=GOAL?"TOUCHDOWN! ":"")+(pnp.ending?"SEE WHO WON ▸":`PASS TO ${esc(pnp.p[1-pnp.cur].name)} ▸`);
 }
+// Turns simply alternate, and the game runs until someone taps End game. To keep it fair, the game only ends on
+// even turns: if the first player has had one more play, the second player gets a last play to answer.
 function pnpAdvance(){
   pnpStore();
-  const s=pnp.p[pnp.cur];
-  if(s.yards>=GOAL&&!s.celebrated){s.celebrated=true;confetti();sfx("td");}
-  const n=pnpNextIdx();
-  if(n<0) return pnpFinish();
-  if(n!==pnp.cur){pnpLoad(n);return pnpHandoff();}
-  pnpLoad(n);
-  nextPlay();
+  if(pnp.ending) return pnpFinish();
+  pnpLoad(1-pnp.cur);
+  pnpHandoff();
 }
 function pnpHandoff(){
   document.body.classList.add("indrive");
-  const s=pnp.p[pnp.cur], o=pnp.p[1-pnp.cur];
+  const i=pnp.cur, s=pnp.p[i], o=pnp.p[1-i];
   $("panel").innerHTML=`
     <div class="res handoff">
       <div class="dailytag">MULTIPLAYER · HAND IT OVER</div>
       <div class="big">${esc(s.name)}, YOU'RE UP</div>
-      <div class="num" style="margin-top:10px">Ball on your ${s.yards}. Play ${s.play+1} of ${PLAYS}.<br>
-        ${esc(o.name)}: ${o.yards>=GOAL?`touchdown in ${o.play} play${o.play>1?"s":""}`:`${o.yards} yards after ${o.play} play${o.play===1?"":"s"}`}.</div>
+      <div class="num" style="margin-top:10px">You're driving <b style="color:var(--chalk)">${i===0?"right ▶":"◀ left"}</b>:
+        <b style="color:var(--gold)">${GOAL-yards} yards</b> to your end zone.<br>
+        Touchdowns: ${pnpScore()}</div>
       <div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="ready">READY ▸</button>
-        <button class="ghost" id="pnpQuit">END GAME</button>
+        <button class="ghost" id="pnpQuit">${i===1?"LAST PLAY, THEN END":"END GAME"}</button>
       </div>
       <div class="savehint">${clockSecs()?"The clock starts when you tap Ready.":"No clock in Learning mode."}</div>
     </div>`;
   $("ready").onclick=()=>nextPlay();
-  $("pnpQuit").onclick=()=>intro();
+  // the first player ends it on the spot (turns are even); the second gets one last play to answer first
+  $("pnpQuit").onclick=i===1?()=>{pnp.ending=true;nextPlay();}:pnpFinish;
   $("ready").focus();
 }
 function pnpFinish(){
   over=true;live=false;clearInterval(timer);
   document.body.classList.remove("indrive");
-  const sc=s=>s.yards>=GOAL?200-s.play:s.yards;
-  const [A,B]=pnp.p, a=sc(A), b=sc(B);
-  const win=a===b?-1:a>b?0:1;
-  const line=s=>s.yards>=GOAL?`TD in ${s.play}`:`${s.yards} yd`;
-  const sub=s=>s.yards>=GOAL?`touchdown on play ${s.play}`:`${GOAL-s.yards} short after ${s.play} plays`;
-  paintPnpBar();
+  const [A,B]=pnp.p;
+  const win=A.td===B.td?-1:A.td>B.td?0:1;
+  paintBoard();paintPnpBar();
   $("panel").innerHTML=`
     <div class="res">
       <div class="dailytag">MULTIPLAYER · FINAL</div>
       <div class="tier" style="color:var(--gold)">${win<0?"IT'S A TIE":esc(pnp.p[win].name)+" WINS"}</div>
       <div class="vs">${pnp.p.map((s,i)=>`<div class="${i===win?"win":""}"><div class="n">${i===win?"🏆 ":""}${esc(s.name)}</div>
-        <div class="y">${line(s)}</div><small>${sub(s)}</small></div>`).join("")}</div>
+        <div class="y">${s.td} TD${s.td===1?"":"s"}</div><small>${i===0?"drove right ▶":"◀ drove left"} · ${s.play} play${s.play===1?"":"s"}</small></div>`).join("")}</div>
       <div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="rematch">REMATCH ↺</button>
-        <button class="ghost" id="pnpSwap">SWAP WHO GOES FIRST</button>
+        <button class="ghost" id="pnpSwap">SWAP SIDES</button>
         <button class="ghost" id="pnpMenu">MENU</button>
       </div>
     </div>`;
@@ -2510,16 +2659,19 @@ function pnpFinish(){
   $("rematch").onclick=()=>pnpStart(names[0],names[1]);
   $("pnpSwap").onclick=()=>pnpStart(names[1],names[0]);
   $("pnpMenu").onclick=()=>intro();
-  if(win>=0||A.yards>=GOAL||B.yards>=GOAL) confetti();
+  if(win>=0) confetti();
   sfx(win>=0?"td":"stall");
 }
 function paintPnpBar(){
   const bar=$("pnpBar");
+  drawMarks(!!pnp);
   if(!pnp){bar.hidden=true;bar.innerHTML="";return;}
+  $("ezLTxt").textContent=pnp.p[1].name.toUpperCase().slice(0,8);
   bar.hidden=false;
-  bar.innerHTML=pnp.p.map((s,i)=>{
-    const y=i===pnp.cur&&!over?yards:s.yards, pl=i===pnp.cur&&!over?play:s.play;
-    return `<div class="${i===pnp.cur&&!over?"on":""}"><span>${esc(s.name)}</span><b>${y>=GOAL?"TD":y+" yd"} · ${pl}/${PLAYS}</b></div>`;
+  // player 2 drives left, so their box sits on the left, under their end zone; each box is that player's touchdowns
+  bar.innerHTML=[1,0].map(i=>{
+    const s=pnp.p[i];
+    return `<div class="${i===pnp.cur&&!over?"on":""}"><span>${i===1?"◀ ":""}${esc(s.name)}${i===0?" ▶":""}</span><b>${s.td} TD${s.td===1?"":"s"}</b></div>`;
   }).join("");
 }
 

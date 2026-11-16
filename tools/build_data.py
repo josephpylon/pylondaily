@@ -43,7 +43,10 @@ def main():
     snaps = get_csv(f"snap_counts/snap_counts_{season}.csv")
     players = {p["gsis_id"]: p for p in get_csv("players/players.csv")}
 
-    week = max((int(s["week"]) for s in snaps if s.get("game_type") == "REG"), default=0)
+    # the latest regular-season week with stats (player stats are posted before snap counts)
+    weekly = get_csv(f"stats_player/stats_player_week_{season}.csv")
+    week = max([int(s["week"]) for s in snaps if s.get("game_type") == "REG"] +
+               [int(w["week"]) for w in weekly if w.get("season_type") == "REG"] + [0])
     snap_games = collections.defaultdict(set)
     for s in snaps:
         if num(s["offense_snaps"]) + num(s["defense_snaps"]) + num(s["st_snaps"]) > 0:
