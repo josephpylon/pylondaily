@@ -189,6 +189,12 @@
     width:100%;max-width:340px;height:92px;background:var(--input);color:var(--paper);border:2px solid var(--line2);
     font:inherit;font-size:12px;padding:8px;margin-top:10px;resize:none;
   }
+  .unlock{margin:18px auto 0;max-width:420px;border:2px solid var(--gold);background:var(--surface2);padding:14px 14px 16px;
+    box-shadow:0 0 0 4px rgba(245,197,66,.08);animation:unlockpop .6s .3s ease-out both}
+  .unlock .uk{font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--gold)}
+  .unlock .ut{font-size:11px;color:var(--dim);line-height:1.6;margin-top:6px}
+  @keyframes unlockpop{0%{transform:scale(.96);opacity:0}60%{transform:scale(1.02);opacity:1}100%{transform:none}}
+  @media (prefers-reduced-motion: reduce){.unlock{animation:none}}
   .nextdaily{margin:14px auto 0;display:inline-flex;flex-direction:column;gap:3px;border:2px solid var(--line);padding:8px 16px;background:var(--surface2)}
   .nextdaily small{font-size:9px;letter-spacing:.2em;color:var(--dim)}
   .nextdaily b{font-size:19px;color:var(--chalk);letter-spacing:.06em;font-variant-numeric:tabular-nums}
@@ -1970,13 +1976,20 @@ function finish(scored,replay){
       <div class="emoji" aria-label="Play by play accuracy">${dailyEmoji()}</div>
       <div class="legend">🟪 closest possible · 🟩 20+ yds · 🟨 10+ · 🟧 1+ · 🟥 lost yards · ⬛ no answer</div>
       <div class="subline">${streakText()}<span class="pct-today${streakText()?"":" solo"}"></span></div>
-      <div class="nextdaily"><small>NEXT DAILY DRIVE IN</small><b class="cd"></b></div>
       <div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="shareBtn">SHARE RESULT</button>
-        <button class="ghost" id="free">FREE PLAY ▸</button>
       </div>
       <div class="savehint" id="shareMsg" aria-live="polite"></div>
       <textarea class="sharebox" id="shareBox" readonly hidden aria-label="Result to share"></textarea>
+      <div class="unlock">
+        <div class="uk">🔓 FREE PLAY UNLOCKED</div>
+        <div class="ut">Unlimited drives until the next Daily: any scoring, Yards, Team mode, Rookies Only and Multiplayer.</div>
+        <div class="entry" style="justify-content:center;flex-wrap:wrap;margin-top:12px">
+          <button id="free">PLAY FREE PLAY ▸</button>
+          <button class="ghost" id="freeMp">MULTIPLAYER 👥</button>
+        </div>
+      </div>
+      <div class="nextdaily"><small>NEXT DAILY DRIVE IN</small><b class="cd"></b></div>
       <div class="links">
         <button class="linkbtn" id="challenge">Challenge a friend</button>
         <button class="linkbtn" id="statsGo">Stats</button>
@@ -1989,7 +2002,9 @@ function finish(scored,replay){
     $("challenge").onclick=()=>shareDaily(challengeText());
     $("statsGo").onclick=openStats;
     $("redo").onclick=redoDaily;
-    $("free").onclick=intro;
+    // straight into a free-play drive with the player's own settings (one tap, not via the start screen)
+    $("free").onclick=start;
+    $("freeMp").onclick=pnpSetup;
     showPct(daily.date);
     return;
   }
