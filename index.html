@@ -491,6 +491,16 @@
   /* beginner-friendly: no settings until today's Daily is done, and none during any Daily drive */
   body.simple .setbox{display:none}
 
+  /* ---------- unlimited ---------- */
+  .unlpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px auto 4px;max-width:480px}
+  .unlcard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--surface2);color:var(--paper);
+    border:2px solid var(--line2);padding:14px 12px;font-weight:400;letter-spacing:0}
+  .unlcard:hover{border-color:var(--gold);filter:none}
+  .unlcard b{font-size:15px;letter-spacing:.14em;color:var(--gold)}
+  .unlcard span{font-size:11px;line-height:1.55;color:var(--dim)}
+  .unlcard small{font-size:10px;letter-spacing:.1em;color:var(--chalk)}
+  @media(max-width:430px){.unlpick{grid-template-columns:1fr}}
+
   /* ---------- pass and play ---------- */
   .pnpbar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
   .pnpbar[hidden]{display:none}
@@ -908,7 +918,13 @@ let tdPlay=0, bonus=0, celebrated=false;
 // in Multiplayer the other player gets the touchdown and the ball goes back to midfield.
 let pickSix=false;
 function applyGain(gain,six){
-  pickSix=!!six;
+  pickSix=!!six;unlScored=false;
+  if(unl){
+    if(six){yards=0;return;}
+    const t=yards+gain;
+    if(t>=GOAL){unl.tds++;unlScored=true;yards=0;} else yards=Math.max(0,t);
+    return;
+  }
   if(pnp){
     if(six){pnp.p[1-pnp.cur].td++;return;}
     yards=Math.max(1,Math.min(GOAL,yards+gain));if(yards>=GOAL) pnp.p[pnp.cur].td++;return;   // tug-of-war: you can't back into the other end zone
@@ -931,6 +947,12 @@ function tally(plays){
   });
   return {yards:y,tdPlay:td,bonus:b};
 }
+// Unlimited: one endless drive with your free-play settings. kind "strikes": a sack, interception or no answer is a
+// strike, and 3 strikes or a pick six ends the run. kind "endless": never ends until you tap End run.
+// Every touchdown counts and the ball goes back to your 0.
+let unl=null, unlScored=false, unlStrike=false;
+const UNL_KEY="hm-unl-best";
+function unlBest(){try{return JSON.parse(localStorage.getItem(UNL_KEY)||"{}")||{};}catch(e){return {};}}
 let pnp=null;          // Multiplayer (pass-the-device) match in progress
 const $=id=>document.getElementById(id);
 
@@ -958,7 +980,7 @@ function makeSlate(){
 function start(){
   if(!dailyDone()) return intro(true);
   endDaily();
-  pnp=null;paintPnpBar();
+  pnp=null;unl=null;paintPnpBar();
   yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;
   slate=makeSlate();
   $("log").innerHTML="";
@@ -973,7 +995,7 @@ function bringPlayIntoView(){
 }
 function nextPlay(){
   if(pnp&&(yards>=GOAL||pickSix)) return pnpAdvance();
-  if(!pnp&&play>=PLAYS) return finish(yards>=GOAL);
+  if(!pnp&&!unl&&play>=PLAYS) return finish(yards>=GOAL);
   document.body.classList.add("indrive");
   paintSimple();
   play++;
@@ -987,7 +1009,7 @@ function nextPlay(){
     // a small pool (one team, one division) can run out of regulars: ask about anyone still unused
     if(!cands.length) cands=allowed.flatMap(p=>POOL[p]).filter(p=>!used.has(p[0]));
     // a long Multiplayer game can use up a small pool: that player may name anyone again
-    if(!cands.length&&pnp){used.clear();cands=allowed.flatMap(p=>TARGETS[p]);if(!cands.length) cands=allowed.flatMap(p=>POOL[p]);}
+    if(!cands.length&&(pnp||unl)){used.clear();cands=allowed.flatMap(p=>TARGETS[p]);if(!cands.length) cands=allowed.flatMap(p=>POOL[p]);}
     if(!cands.length) return finish(yards>=GOAL);
     target=cands[Math.floor(Math.random()*cands.length)][2];
   }
@@ -996,7 +1018,8 @@ function nextPlay(){
   $("panel").innerHTML=`
     <div class="plabel">${daily?`DAILY DRIVE #${daily.no}${practice?(daily.date===todayET()?" REPLAY (DOESN'T COUNT)":" · REPLAY (DOESN'T COUNT)"):""} · `
       :pnp?`MULTIPLAYER · ${esc(pnp.p[pnp.cur].name)} · `
-      :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${filterTag()} · </span>`}PLAY ${play}${pnp?"":` OF ${PLAYS}`}</div>
+      :unl?`UNLIMITED ∞ · ${SCORING[scoring].label}${filterTag()} · `
+      :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${filterTag()} · </span>`}PLAY ${play}${pnp||unl?"":` OF ${PLAYS}`}</div>
     <div class="prompt">Name a ${pill} averaging closest to
       <b>${target.toFixed(1)}</b> ${unitLong()} per game this season.</div>
     ${slotHint(slot)?`<div class="hint">${slotHint(slot)}</div>`:""}
@@ -1012,12 +1035,13 @@ function nextPlay(){
       ? `<div class="clock"><span id="ct">${clockSecs()}</span>s
       <span class="bar"><i id="cbar" style="width:100%"></i></span>
       <button class="ghost pausebtn" id="pause">❚❚ PAUSE</button>
-      ${daily&&!practice?"":`<button class="ghost pausebtn" id="restart">↺ RESTART</button>`}</div>`
+      ${daily&&!practice?"":unl?`<button class="ghost pausebtn" id="unlEnd">END RUN</button>`:`<button class="ghost pausebtn" id="restart">↺ RESTART</button>`}</div>`
       : `<div class="clock"><span style="flex:1">NO CLOCK · LEARNING MODE · averages are in the player pool</span>
-      <button class="ghost pausebtn" id="restart">↺ RESTART</button></div>`}`;
+      ${unl?`<button class="ghost pausebtn" id="unlEnd">END RUN</button>`:`<button class="ghost pausebtn" id="restart">↺ RESTART</button>`}</div>`}`;
   $("snap").onclick=()=>submit();
   if($("pause")) $("pause").onclick=pause;
   if($("restart")) $("restart").onclick=restart;
+  if($("unlEnd")) $("unlEnd").onclick=()=>{clearInterval(timer);live=false;unlFinish(true);};
   playT0=performance.now();
   wireInput();
   $("ans").focus({preventScroll:true});
@@ -1128,7 +1152,7 @@ const yesterdayET=()=>addDays(todayET(),-1);
 // A replay of a Daily Drive (today's or yesterday's): same seven plays and rules, but nothing is saved, shared or counted.
 function replayDaily(date){
   endDaily();
-  pnp=null;paintPnpBar();
+  pnp=null;unl=null;paintPnpBar();
   enterDailyRules();
   practice=true;
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
@@ -1150,7 +1174,7 @@ function endDaily(){
 }
 function startDaily(){
   endDaily();
-  pnp=null;paintPnpBar();
+  pnp=null;unl=null;paintPnpBar();
   const date=todayET();
   enterDailyRules();
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
@@ -1343,6 +1367,7 @@ const TUT=[
        <div><span class="key">⏱</span><span><b>Clock:</b> Standard (25 s a play), Speed (5 s) or Learning (no clock, averages shown in the player pool).</span></div>
        <div><span class="key">🎯</span><span><b>What you guess:</b> fantasy points per game (Full PPR, Half PPR, Standard) or yards per game (Passing, Rushing, Receiving, All).</span></div>
        <div><span class="key">🏈</span><span><b>Which players:</b> everyone, one team, one division, or rookies only.</span></div>
+       <div><span class="key">∞</span><span><b>Unlimited:</b> one endless drive. Play until three strikes, or with no limit at all.</span></div>
        <div><span class="key">👥</span><span><b>Multiplayer:</b> a tug-of-war for two on one phone. Score touchdowns for as long as you like.</span></div>
        <div><span class="key">↺</span><span><b>Redo the Daily</b> or play <b>yesterday's</b>, just for fun; they don't count.</span></div>
      </div>`},
@@ -1401,6 +1426,7 @@ function restart(){
   clearInterval(timer);live=false;paused=false;
   if(practice&&daily) return replayDaily(daily.date);
   if(pnp) return pnpStart(pnp.p[0].name,pnp.p[1].name);
+  if(unl) return unlStart(unl.kind);
   start();
 }
 
@@ -1460,7 +1486,7 @@ function recordPlay(p,gain,diff,best){
   if(m||save.share) persist();
 }
 function recordDrive(scored){
-  if(practice||pnp) return;
+  if(practice||pnp||unl) return;
   const m=me();
   if(m){
     const s=m.stats;
@@ -1591,7 +1617,7 @@ document.addEventListener("keydown",e=>{
 function intro(nudge){
   endDaily();
   if(pendingData){const d=pendingData;pendingData=null;applyData(d);}
-  pnp=null;paintPnpBar();
+  pnp=null;unl=null;paintPnpBar();
   document.body.classList.remove("indrive");
   yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;live=false;paused=false;
   paintBoard();drawPool();
@@ -1612,6 +1638,7 @@ function intro(nudge){
       </div>
       ${done?`<div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="go">FREE PLAY ▸</button>
+        <button class="ghost" id="unlGo">UNLIMITED ∞</button>
         <button class="ghost" id="pnpGo">MULTIPLAYER 👥</button>
       </div>
       <div class="links">
@@ -1623,6 +1650,7 @@ function intro(nudge){
       :`<div class="entry" style="justify-content:center;flex-wrap:wrap">
         <button id="dailyGo">${dLabel}</button>
         <button class="ghost" id="go" disabled title="Finish today's Daily Drive first">🔒 FREE PLAY</button>
+        <button class="ghost" id="unlGo" disabled title="Finish today's Daily Drive first">🔒 UNLIMITED</button>
         <button class="ghost" id="pnpGo" disabled title="Finish today's Daily Drive first">🔒 MULTIPLAYER</button>
       </div>`}
       <div class="note" id="note" style="text-align:center">${nudge&&!done?"Finish today's Daily Drive to unlock free play.":""}</div>
@@ -1633,6 +1661,7 @@ function intro(nudge){
   if($("yestGo")) $("yestGo").onclick=()=>replayDaily(yesterdayET());
   $("go").onclick=start;
   $("pnpGo").onclick=pnpSetup;
+  $("unlGo").onclick=unlSetup;
   $("howLink").onclick=openTut;
   paintSimple();paintCd();
   (done?$("go"):$("dailyGo")).focus();
@@ -1893,6 +1922,10 @@ function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
   const before=yards, hadTd=!!tdPlay;
   const six=!!(rk&&rk.six);
   applyGain(gain,six);
+  // Unlimited: sacks, interceptions and no answers are strikes; a pick six ends a 3-strikes run
+  unlStrike=false;
+  if(unl){unl.plays=play;if(unl.kind==="strikes"&&!six&&(tier==="SACKED"||tier==="INTERCEPTED"||!p)){unl.strikes++;unlStrike=true;}}
+  const unlOver=!!unl&&unl.kind==="strikes"&&(six||unl.strikes>=3);
   const justTd=!hadTd&&!!tdPlay, more=!six&&!pnp&&!!tdPlay&&play<PLAYS;
   paintBoard();
   if(gain!==0){
@@ -1915,8 +1948,11 @@ function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
              · you needed <b style="color:var(--chalk)">${target.toFixed(1)}</b><br>
              off by ${diff.toFixed(1)} ${unitShort()}</div>`
           :`<div class="num" style="margin-top:14px">${blurb}</div>`}
-      <div class="yds" style="${gain<0||six?"color:var(--hot)":""}">${six?(pnp?"TURNOVER":hadTd?"BONUS YARDS LOST":"BALL BACK TO THE 0"):gain>0?"+"+gain+" YARDS":gain<0?`LOSS OF ${-gain}`:"NO GAIN"}</div>
-      ${six?`<div class="tdline" style="color:var(--hot)">${pnp?`Touchdown for ${esc(pnp.p[1-pnp.cur].name)}! The ball goes back to midfield.`
+      <div class="yds" style="${gain<0||six?"color:var(--hot)":""}">${six?(pnp?"TURNOVER":unl?"BALL BACK TO THE 0":hadTd?"BONUS YARDS LOST":"BALL BACK TO THE 0"):gain>0?"+"+gain+" YARDS":gain<0?`LOSS OF ${-gain}`:"NO GAIN"}</div>
+      ${unl?(unlScored?`<div class="tdline">TOUCHDOWN #${unl.tds}! The ball goes back to your 0.</div>`
+          :six?`<div class="tdline" style="color:var(--hot)">${unl.kind==="strikes"?"Pick six: the run is over.":"Pick six: back to your own 0."}</div>`
+          :unlStrike?`<div class="tdline" style="color:var(--hot)">STRIKE ${unl.strikes} of 3${unl.strikes>=3?": the run is over.":""}</div>`:"")
+      :six?`<div class="tdline" style="color:var(--hot)">${pnp?`Touchdown for ${esc(pnp.p[1-pnp.cur].name)}! The ball goes back to midfield.`
         :hadTd?"Your touchdown still counts, but the drive is over.":"The drive is over."}</div>`:""}
       ${justTd?`<div class="tdline">TOUCHDOWN on play ${tdPlay}!${bonus?` +${bonus} bonus yards`:""}</div>`
         :hadTd&&!pnp&&!six?`<div class="tdline">Bonus yards: +${bonus}</div>`
@@ -1924,17 +1960,19 @@ function showResult(p,gain,tier,blurb,diff,fixed,extra,rk){
       ${extra?`<div class="extra">${extra}</div>`:""}
       ${revealHTML(top,p)}
       <div class="entry" style="justify-content:center">
-        <button id="nx">${pnp?pnpNextLabel():six||play>=PLAYS?"SEE THE DRIVE":more?"KEEP GOING: BONUS YARDS ▸":"NEXT PLAY ▸"}</button>
+        <button id="nx">${pnp?pnpNextLabel():unl?(unlOver?"SEE THE RUN":"NEXT PLAY ▸"):six||play>=PLAYS?"SEE THE DRIVE":more?"KEEP GOING: BONUS YARDS ▸":"NEXT PLAY ▸"}</button>
         ${more?`<button class="ghost" id="fin">FINISH DRIVE</button>`:""}
-        ${!six&&yards<GOAL&&play<PLAYS&&(!daily||practice)&&!pnp?`<button class="ghost" id="restart">↺ RESTART</button>`:""}
+        ${unl&&!unlOver?`<button class="ghost" id="unlEnd2">END RUN</button>`:""}
+        ${!six&&yards<GOAL&&play<PLAYS&&(!daily||practice)&&!pnp&&!unl?`<button class="ghost" id="restart">↺ RESTART</button>`:""}
       </div>
     </div>`;
-  $("nx").onclick=pnp?pnpAdvance:six?()=>finish(yards>=GOAL):nextPlay;
+  $("nx").onclick=pnp?pnpAdvance:unl?(unlOver?()=>unlFinish(false):nextPlay):six?()=>finish(yards>=GOAL):nextPlay;
+  if($("unlEnd2")) $("unlEnd2").onclick=()=>unlFinish(true);
   if($("fin")) $("fin").onclick=()=>finish(true);
   if($("restart")) $("restart").onclick=restart;
   $("nx").focus();
   if(perfect) sparkle();
-  if(justTd||(pnp&&yards>=GOAL)){celebrated=true;confetti();setTimeout(()=>sfx("td"),110);}
+  if(justTd||unlScored||(pnp&&yards>=GOAL)){celebrated=true;confetti();setTimeout(()=>sfx("td"),110);}
   else setTimeout(()=>sfx(!p?"whistle":best?"house":gain>0?"gain":gain===0?"zero":"loss",gain),110);
   logLine(play,slot,p?p[0]:null,p?p[2]:null,target,tier,gain);
   drawPool();
@@ -1959,6 +1997,7 @@ function tdChoice(){
 
 function finish(scored,replay){
   if(pnp){pnpStore();return pnpFinish();}
+  if(unl) return unlFinish(false);
   over=true;live=false;paused=false;clearInterval(timer);
   paintSimple();
   $("rookieT").disabled=$("teamSel").disabled=scoring==="pass";
@@ -2015,9 +2054,10 @@ function finish(scored,replay){
       <textarea class="sharebox" id="shareBox" readonly hidden aria-label="Result to share"></textarea>
       <div class="unlock">
         <div class="uk">🔓 FREE PLAY UNLOCKED</div>
-        <div class="ut">Unlimited drives until the next Daily: any scoring, Yards, Team mode, Rookies Only and Multiplayer.</div>
+        <div class="ut">Unlimited drives until the next Daily: any scoring, Yards, Team mode, Rookies Only, Unlimited and Multiplayer.</div>
         <div class="entry" style="justify-content:center;flex-wrap:wrap;margin-top:12px">
           <button id="free">PLAY FREE PLAY ▸</button>
+          <button class="ghost" id="freeUnl">UNLIMITED ∞</button>
           <button class="ghost" id="freeMp">MULTIPLAYER 👥</button>
         </div>
       </div>
@@ -2037,6 +2077,7 @@ function finish(scored,replay){
     // straight into a free-play drive with the player's own settings (one tap, not via the start screen)
     $("free").onclick=start;
     $("freeMp").onclick=pnpSetup;
+    $("freeUnl").onclick=unlSetup;
     showPct(daily.date);
     return;
   }
@@ -2053,14 +2094,14 @@ function finish(scored,replay){
 
 function paintBoard(){
   $("sYd").textContent=yards;
-  $("sPlay").textContent=pnp?play:`${Math.min(play,PLAYS)} / ${PLAYS}`;
+  $("sPlay").textContent=pnp||unl?play:`${Math.min(play,PLAYS)} / ${PLAYS}`;
   const inBonus=!pnp&&!!tdPlay;
   $("sGoK").textContent=inBonus?"BONUS":"TO GO";
   $("sGo").textContent=inBonus?"+"+bonus:Math.max(0,GOAL-yards);
   $("ezTxt").textContent=pnp?pnp.p[0].name.toUpperCase().slice(0,8):inBonus?"BONUS":"END ZONE";
   $("field").classList.toggle("scored",inBonus);
   $("ball").style.left=(inBonus?91:pnp?(yards>=GOAL?(pnp.cur===0?94:6):Math.max(5,Math.min(95,fieldX(yards)))):Math.min(92,2+yards*.86))+"%";
-  if(pnp) paintPnpBar();
+  if(pnp||unl) paintPnpBar();
 }
 
 function drawPool(){
@@ -2603,7 +2644,7 @@ const pnpPos=()=>!pnp?50:pnpProg(pnp.cur,yards);   // where the ball is right no
 function pnpSetup(){
   if(!dailyDone()) return intro(true);
   endDaily();
-  pnp=null;paintPnpBar();
+  pnp=null;unl=null;paintPnpBar();
   clearInterval(timer);
   document.body.classList.remove("indrive");
   yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;live=false;paused=false;
@@ -2721,6 +2762,12 @@ function pnpFinish(){
 function paintPnpBar(){
   const bar=$("pnpBar");
   drawMarks(!!pnp);
+  if(unl){
+    bar.hidden=false;
+    bar.innerHTML=`<div class="on"><span>∞ ${unl.kind==="strikes"?"3 STRIKES":"NO LIMIT"}</span><b>${unl.tds} TD${unl.tds===1?"":"s"}</b></div>`+
+      `<div><span>${unl.kind==="strikes"?"STRIKES":"PLAYS"}</span><b>${unl.kind==="strikes"?"✖".repeat(unl.strikes)+"○".repeat(Math.max(0,3-unl.strikes)):play}</b></div>`;
+    return;
+  }
   if(!pnp){bar.hidden=true;bar.innerHTML="";return;}
   $("ezLTxt").textContent=pnp.p[1].name.toUpperCase().slice(0,8);
   bar.hidden=false;
@@ -2729,6 +2776,73 @@ function paintPnpBar(){
     const s=pnp.p[i];
     return `<div class="${i===pnp.cur&&!over?"on":""}"><span>${i===1?"◀ ":""}${esc(s.name)}${i===0?" ▶":""}</span><b>${s.td} TD${s.td===1?"":"s"}</b></div>`;
   }).join("");
+}
+
+/* ---------- Unlimited mode ---------- */
+function unlSetup(){
+  if(!dailyDone()) return intro(true);
+  endDaily();
+  pnp=null;unl=null;paintPnpBar();clearInterval(timer);
+  document.body.classList.remove("indrive");
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;live=false;paused=false;
+  paintBoard();
+  const b=unlBest(), extras=filterWords();
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="tier" style="color:var(--chalk)">UNLIMITED ∞</div>
+      <div class="rules">One drive that never runs out of plays. Every touchdown counts, then the ball goes back to your 0
+        and you keep going.<br>Rules from ⚙ Game settings: <b>${mode.toUpperCase()}</b>, <b>${SCORING[scoring].label}</b>${extras?", "+extras:""}.</div>
+      <div class="unlpick">
+        <button class="unlcard" id="unlStrikes"><b>3 STRIKES</b>
+          <span>A sack, an interception or no answer is a strike. Three strikes, or a pick six, and the run is over.</span>
+          <small>${b.strikes?`Your best: ${b.strikes} TD${b.strikes===1?"":"s"}`:"No best yet"}</small></button>
+        <button class="unlcard" id="unlEndless"><b>NO LIMIT</b>
+          <span>Play as long as you like. Nothing ends the run: tap End run when you're done.</span>
+          <small>${b.endless?`Your best: ${b.endless} TD${b.endless===1?"":"s"}`:"No best yet"}</small></button>
+      </div>
+      <div class="entry" style="justify-content:center"><button class="ghost" id="unlBack">BACK</button></div>
+    </div>`;
+  $("unlStrikes").onclick=()=>unlStart("strikes");
+  $("unlEndless").onclick=()=>unlStart("endless");
+  $("unlBack").onclick=()=>intro();
+  $("unlStrikes").focus();
+}
+function unlStart(kind){
+  endDaily();
+  pnp=null;clearInterval(timer);
+  unl={kind,tds:0,strikes:0,plays:0};
+  yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;
+  slate=makeSlate();
+  $("log").innerHTML="";
+  paintPnpBar();
+  nextPlay();
+}
+function unlFinish(quit){
+  over=true;live=false;paused=false;clearInterval(timer);
+  document.body.classList.remove("indrive");
+  const u=unl, b=unlBest(), prev=b[u.kind]||0, rec=u.tds>prev;
+  if(rec){b[u.kind]=u.tds;try{localStorage.setItem(UNL_KEY,JSON.stringify(b));}catch(e){}}
+  paintBoard();
+  $("panel").innerHTML=`
+    <div class="res">
+      <div class="dailytag">UNLIMITED ∞ · ${u.kind==="strikes"?"3 STRIKES":"NO LIMIT"}</div>
+      <div class="tier" style="color:var(--gold)">${quit?"RUN ENDED":pickSix?"PICK SIX: RUN OVER":"THREE STRIKES"}</div>
+      <div class="vs" style="grid-template-columns:1fr 1fr">
+        <div class="${rec?"win":""}"><div class="n">TOUCHDOWNS</div><div class="y">${u.tds}</div><small>${rec?"🏆 new best!":`best: ${Math.max(prev,u.tds)}`}</small></div>
+        <div><div class="n">PLAYS</div><div class="y">${u.plays}</div><small>${u.kind==="strikes"?`${u.strikes} strike${u.strikes===1?"":"s"}`:"no limit"}</small></div>
+      </div>
+      <div class="entry" style="justify-content:center;flex-wrap:wrap">
+        <button id="unlAgain">PLAY AGAIN ↺</button>
+        <button class="ghost" id="unlMenu">MENU</button>
+      </div>
+    </div>`;
+  const kind=u.kind;
+  $("unlAgain").onclick=()=>unlStart(kind);
+  $("unlMenu").onclick=()=>intro();
+  if(rec&&u.tds>0) confetti();
+  sfx(u.tds?"td":"stall");
+  unl=null;paintPnpBar();
+  $("unlAgain").focus();
 }
 
 /* ---------- owner tools (profile panel): signed in as this name, reset today's Daily or start fresh ---------- */
