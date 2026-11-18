@@ -284,6 +284,8 @@
     .setbox summary{flex-wrap:wrap;row-gap:4px}
     .setbox .ssum{order:3;flex-basis:100%;text-align:left}
   }
+  .sreset{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+  .sreset small{font-size:10px;color:var(--dim);letter-spacing:.04em}
   .sfoot{font-size:10px;color:var(--faint);margin-top:14px;letter-spacing:.04em}
 
   /* ---------- scoreboard ---------- */
@@ -657,6 +659,10 @@
         <select id="teamSel" aria-label="Team or division"></select>
         <div class="sexp" id="teamNote"></div>
         <label class="chk"><input type="checkbox" id="rookieT"> Rookies only <small id="rookieNote">2026 class</small></label>
+      </div>
+      <div class="sreset">
+        <button class="ghost small" id="setReset">↺ RESET SETTINGS</button>
+        <small>Back to normal: Standard clock · Standard (no PPR) · All teams</small>
       </div>
       <div class="sfoot">Changing a setting starts a new drive.</div>
     </div>
@@ -2257,7 +2263,7 @@ function paintScoring(){
 function paintSetSum(){
   const m={standard:"STANDARD",speed:"SPEED",learning:"LEARNING"}[mode];
   const who=rk()?"ROOKIES":tm()?teamLabel().toUpperCase():"ALL PLAYERS";
-  $("setSum").textContent=`${m} · ${SCORING[scoring].label} · ${who}`;
+  $("setSum").textContent=`${m} · ${scoring==="std"?"NO PPR":SCORING[scoring].label} · ${who}`;
 }
 function setScoring(v){
   if(daily&&!over) return lockedNote();
@@ -2270,6 +2276,18 @@ function setScoring(v){
   intro();
 }
 $("scoreSel").onchange=e=>{setScoring(e.target.value);paintScoring();};
+// Reset settings: back to the normal setup (Standard clock, Standard scoring with no PPR, every team, rookies off)
+const NORMAL={mode:"standard",scoring:"std"};
+$("setReset").onclick=()=>{
+  if(daily&&!over) return lockedNote();
+  endDaily();
+  mode=NORMAL.mode;scoring=NORMAL.scoring;team="";rookie=false;
+  try{localStorage.setItem("hm-mode",mode);localStorage.setItem("hm-scoring",scoring);
+    localStorage.setItem("hm-team","");localStorage.setItem("hm-rookie","0");}catch(e){}
+  clearInterval(timer);
+  buildPool();paintScoring();paintExtras();
+  intro();
+};
 try{rookie=localStorage.getItem("hm-rookie")==="1";localStorage.removeItem("hm-hints");}catch(e){}
 try{const t=localStorage.getItem("hm-team")||""; if(validTeam(t)){team=t;rookie=false;}}catch(e){}
 try{const v=localStorage.getItem("hm-scoring"); if(SCORING[v]) scoring=v;}catch(e){}
