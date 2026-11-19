@@ -105,6 +105,11 @@
   body{transition:background .25s,color .25s}
   .topbar{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:20}
   .topbar>button,.fieldpick>button{padding:7px 11px;font-size:11px;letter-spacing:.12em}
+  /* daily streak: flame + days in a row; grey until there is a streak */
+  .streakbtn{display:flex;align-items:center;gap:4px;font-size:13px!important;letter-spacing:0!important}
+  .streakbtn b{font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums}
+  .streakbtn.zero{filter:grayscale(1);opacity:.6}
+  .streakbtn.zero b{color:var(--dim)}
   .fieldpick{position:relative}
   .sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:6px;
       border:1px solid rgba(255,255,255,.6);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
@@ -601,6 +606,7 @@
   <button class="ghost acctbtn" id="acctBtn" aria-haspopup="dialog" aria-label="Profile">👤 <span class="lbl">SIGN IN</span></button>
 </div>
 <div class="topbar">
+  <button class="ghost streakbtn" id="streakBtn" aria-haspopup="dialog" title="Daily streak">🔥<b id="streakN">0</b></button>
   <button class="ghost" id="statsBtn" aria-haspopup="dialog" aria-label="Daily stats" title="Daily stats">📊</button>
   <button class="ghost" id="helpBtn" aria-label="How to play">?</button>
   <div class="fieldpick">
@@ -1673,7 +1679,7 @@ function intro(nudge){
   $("pnpGo").onclick=pnpSetup;
   $("unlGo").onclick=unlSetup;
   $("howLink").onclick=openTut;
-  paintSimple();paintCd();
+  paintSimple();paintCd();paintStreak();
   (done?$("go"):$("dailyGo")).focus();
 }
 
@@ -2497,8 +2503,17 @@ function loadHist(){
   try{const h=JSON.parse(localStorage.getItem(HIST_KEY)||"{}"); if(h&&typeof h==="object") hist=h;}catch(e){}
   // an official Daily finished before this feature existed still counts
   const d=loadDaily(); if(d&&d.done&&!hist[d.date]) recordHist(d,true);
+  paintStreak();
 }
-function saveHist(){try{localStorage.setItem(HIST_KEY,JSON.stringify(hist));}catch(e){}}
+function saveHist(){try{localStorage.setItem(HIST_KEY,JSON.stringify(hist));}catch(e){}paintStreak();}
+// the flame at the top: Dailies finished on back-to-back days (still alive until tomorrow's Daily is missed)
+function paintStreak(){
+  const n=streaks().cur, b=$("streakBtn");
+  $("streakN").textContent=n;
+  b.classList.toggle("zero",!n);
+  const label=n?`${n}-day Daily streak`:"No Daily streak yet: finish today's Daily to start one";
+  b.title=label;b.setAttribute("aria-label",label);
+}
 function recordHist(st,quiet){
   if(!st||!st.date) return;
   const t=tally(st.plays), y=t.yards;
@@ -2610,6 +2625,7 @@ function openStats(){
 }
 function closeStats(){$("statsM").classList.remove("open");}
 $("statsBtn").onclick=openStats;
+$("streakBtn").onclick=openStats;
 $("statsM").addEventListener("click",e=>{
   if(e.target.id==="statsM"||e.target.id==="statsX") return closeStats();
 });
