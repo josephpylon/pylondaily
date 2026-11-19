@@ -38,6 +38,7 @@
   if(!t) t=Date.now()<Date.parse("2027-01-01T05:00:00-05:00")?"christmas":"dark";
   if(t==="light"||t==="christmas") document.documentElement.dataset.theme=t;
   try{ if(localStorage.getItem("hm-lights")==="off") document.documentElement.dataset.lights="off"; }catch(e){}
+  try{ if(localStorage.getItem("hm-bold")==="on") document.documentElement.dataset.bold="on"; }catch(e){}
   try{ var f=localStorage.getItem("hm-field"); if(f==="blue"||f==="red") document.documentElement.dataset.field=f; }catch(e){}
 </script>
 <style>
@@ -103,6 +104,12 @@
     --turf1:#a01722; --turf2:#b31d29; --ez1:#1d1d21; --ez2:#060607; --fborder:#7a1019;
   }
   body{transition:background .25s,color .25s}
+  /* Bold text (theme menu): every word bold, and the grey secondary text brighter, for easier reading */
+  :root[data-bold] *{font-weight:700!important}
+  :root[data-bold]{--dim:#b3c0ce;--faint:#8d9cb0;--pooltext:#c4d2e0}
+  :root[data-bold][data-theme="light"]{--dim:#3c4b5b;--faint:#5d6e80;--pooltext:#22303f}
+  :root[data-bold][data-theme="christmas"]{--dim:#cfe0d2;--faint:#a5bfab;--pooltext:#e0ece2}
+  :root[data-bold] button.ghost{border-color:var(--line2)}
   .topbar{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:20}
   .topbar>button,.fieldpick>button{padding:7px 11px;font-size:11px;letter-spacing:.12em}
   /* daily streak: flame + days in a row; grey until there is a streak */
@@ -625,6 +632,7 @@
       <button data-t="christmas">❄ CHRISTMAS</button>
       <label class="lightsopt"><input type="checkbox" id="lightsT" checked> STRING LIGHTS</label>
       <label class="lightsopt always"><input type="checkbox" id="soundT" checked> SOUND</label>
+      <label class="lightsopt always"><input type="checkbox" id="boldT"> BOLD TEXT</label>
     </div>
   </div>
 </div>
@@ -1364,11 +1372,12 @@ const TUT=[
   {t:"THE BUTTONS UP TOP",b:`<p>Everything you need is in the corners of the screen.</p>
      <div class="tkeys">
        <div><span class="key">🏠</span><span><b>Home:</b> back to the start screen from any game (not during the Daily).</span></div>
-       <div><span class="key">👤</span><span><b>Profile:</b> sign in with a name to keep your stats on this device.</span></div>
-       <div><span class="key">📊</span><span><b>Stats:</b> your Daily streak and how each Daily went.</span></div>
+       <div><span class="key">👤</span><span><b>Profile:</b> sign in with a name to keep your stats on this device. You can change the name any time.</span></div>
+       <div><span class="key">🔥</span><span><b>Streak:</b> how many days in a row you've finished the Daily.</span></div>
+       <div><span class="key">📊</span><span><b>Stats:</b> your streaks and how each Daily went.</span></div>
        <div><span class="key">?</span><span><b>How to play:</b> opens this guide again any time.</span></div>
        <div><span class="key"><i class="sw" style="background:#1f6b33"></i></span><span><b>Field color:</b> green, blue or red turf.</span></div>
-       <div><span class="key">☾</span><span><b>Theme:</b> dark, light or Christmas. The same menu turns <b>sound</b> on or off (and string lights in Christmas).</span></div>
+       <div><span class="key">☾</span><span><b>Theme:</b> Christmas (for the holidays), dark or light. The same menu turns <b>sound</b> on or off, switches on <b>bold text</b> for easier reading, and controls string lights in Christmas.</span></div>
      </div>`},
   {t:"ONE DAILY DRIVE",b:`<p>Every day at 5 a.m. Eastern there's one <b>Daily Drive</b>: the same seven plays for everyone, Full PPR scoring, 25 seconds a play, one try.</p>
      <p>When you finish, the result screen has:</p>
@@ -1478,6 +1487,17 @@ function signIn(raw){
   if(!save.profiles[key]) save.profiles[key]={name,created:Date.now(),stats:blankStats()};
   save.current=key;persist();return true;
 }
+// rename the signed-in profile: stats come along; refused if another profile on this device already has the name
+function renameProfile(raw){
+  const name=String(raw).replace(/\s+/g," ").trim().slice(0,20);
+  if(!name) return "Type a name first.";
+  const old=save.current, prof=me(); if(!prof) return "Sign in first.";
+  const key="p:"+name.toLowerCase();
+  if(key!==old&&save.profiles[key]) return `“${name}” is already a profile on this device.`;
+  prof.name=name;
+  if(key!==old){save.profiles[key]=prof;delete save.profiles[old];save.current=key;}
+  persist();return "";
+}
 function secsUsed(){
   return clockSecs() ? Math.max(0,clockSecs()-left) : Math.round((performance.now()-playT0)/1000);
 }
@@ -1542,7 +1562,13 @@ function paintAcct(){
     const s=m.stats;
     const pct=s.drives?Math.round(s.tds/s.drives*100)+"%":"–";
     const cell=(k,v)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
-    h+=`<h2>${esc(m.name)}</h2>
+    h+=`<h2>${esc(m.name)} <button class="linkbtn" id="acctRename" style="font-size:11px;margin-left:6px">✎ Change name</button></h2>
+      <div class="row" id="renameRow" hidden style="margin-top:0;margin-bottom:12px">
+        <input type="text" id="acctNewName" maxlength="20" value="${esc(m.name)}" autocomplete="off" spellcheck="false" aria-label="New name">
+        <button class="small" id="acctRenameGo">SAVE</button>
+        <button class="ghost small" id="acctRenameX">CANCEL</button>
+      </div>
+      <div class="note" id="renameNote" style="margin-top:-6px"></div>
       <div class="statgrid">
         ${cell("DRIVES",s.drives)}${cell("TOUCHDOWNS",s.tds)}${cell("TD RATE",pct)}
         ${cell("BEST DRIVE",s.best+" yd")}${cell("FEWEST PLAYS TO SCORE",s.fewest||"–")}${cell("HOUSE CALLS",s.perfect)}
@@ -1599,6 +1625,9 @@ $("acct").addEventListener("click",e=>{
   if(t.id==="acctGo") return trySignIn($("acctName").value);
   if(t.dataset&&t.dataset.p) return trySignIn(t.dataset.p);
   if(t.id==="acctOut"){save.current=null;persist();return paintAcct();}
+  if(t.id==="acctRename"){$("renameRow").hidden=false;const i=$("acctNewName");i.focus();i.select();return;}
+  if(t.id==="acctRenameX"){$("renameRow").hidden=true;$("renameNote").textContent="";return;}
+  if(t.id==="acctRenameGo"){const err=renameProfile($("acctNewName").value);if(err){$("renameNote").textContent=err;return;}return paintAcct();}
   if(t.id==="acctDel"){
     if(t.dataset.sure){delete save.profiles[save.current];save.current=null;persist();return paintAcct();}
     t.dataset.sure="1";t.textContent="CLICK AGAIN TO DELETE";return;
@@ -1623,6 +1652,7 @@ $("acct").addEventListener("change",e=>{
 });
 $("acct").addEventListener("keydown",e=>{
   if(e.key==="Enter"&&e.target.id==="acctName"){e.preventDefault();trySignIn(e.target.value);}
+  if(e.key==="Enter"&&e.target.id==="acctNewName"){e.preventDefault();const err=renameProfile(e.target.value);if(err) $("renameNote").textContent=err;else paintAcct();}
 });
 // Escape closes the panel wherever focus happens to be
 document.addEventListener("keydown",e=>{
@@ -2489,7 +2519,11 @@ const SFX={
   ach(){[784,988,1175,1568].forEach((f,i)=>tone(f,i*.07,.32,"sine",.08));}
 };
 function sfx(name,arg){if(!soundOn) return; try{SFX[name](arg);}catch(e){}}
-function paintSound(){$("soundT").checked=soundOn;}
+function paintSound(){$("soundT").checked=soundOn;$("boldT").checked=document.documentElement.dataset.bold==="on";}
+$("boldT").onchange=e=>{
+  if(e.target.checked) document.documentElement.dataset.bold="on"; else delete document.documentElement.dataset.bold;
+  try{localStorage.setItem("hm-bold",e.target.checked?"on":"off");}catch(err){}
+};
 $("soundT").onchange=e=>{
   soundOn=e.target.checked;
   try{localStorage.setItem("hm-sound",soundOn?"on":"off");}catch(err){}
