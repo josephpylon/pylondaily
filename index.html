@@ -32,7 +32,11 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Pylon Daily","url":"https://pylondaily.com/","description":"A free daily fantasy football guessing game: name the NFL player closest to a target fantasy points per game and drive 100 yards in 7 plays.","genre":["Sports","Trivia","Puzzle"],"gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script>
   // dark by default; remember a switch to light on this device
-  try{ var t=localStorage.getItem("hm-theme"); if(t==="light"||t==="christmas") document.documentElement.dataset.theme=t; }catch(e){}
+  // Christmas is the default theme for the holiday season (until New Year's Day 2027) for anyone who hasn't picked a
+  // theme from the menu; a pick (hm-theme-pick) is remembered on this device.
+  var t=null; try{ t=localStorage.getItem("hm-theme-pick"); }catch(e){}
+  if(!t) t=Date.now()<Date.parse("2027-01-01T05:00:00-05:00")?"christmas":"dark";
+  if(t==="light"||t==="christmas") document.documentElement.dataset.theme=t;
   try{ if(localStorage.getItem("hm-lights")==="off") document.documentElement.dataset.lights="off"; }catch(e){}
   try{ var f=localStorage.getItem("hm-field"); if(f==="blue"||f==="red") document.documentElement.dataset.field=f; }catch(e){}
 </script>
@@ -2129,13 +2133,13 @@ const THEMES={dark:"☾ DARK",light:"☀ LIGHT",christmas:"❄ CHRISTMAS"};
 const themeLabel=t=>{const [i,...w]=THEMES[t].split(" ");return `${i} <span class="lbl">${w.join(" ")}</span>`;};
 const theme=()=>document.documentElement.dataset.theme||"dark";
 const isLight=()=>theme()==="light";
-function setTheme(t){
+function setTheme(t,picked){
   if(!THEMES[t]) t="dark";
   if(t==="dark") delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme=t;
   $("themeBtn").innerHTML=themeLabel(t);
   $("tmenu").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
-  try{localStorage.setItem("hm-theme",t);}catch(e){}
+  if(picked){try{localStorage.setItem("hm-theme-pick",t);}catch(e){}}
   snow(t==="christmas");
 }
 
@@ -2204,7 +2208,7 @@ $("lightsT").onchange=e=>{
 $("tmenu").onclick=e=>{
   e.stopPropagation();
   const b=e.target.closest("[data-t]"); if(!b) return;
-  setTheme(b.dataset.t);$("tmenu").classList.remove("open");
+  setTheme(b.dataset.t,true);$("tmenu").classList.remove("open");
 };
 document.addEventListener("click",e=>{
   if(!e.target.closest(".fieldpick")){$("fmenu").classList.remove("open");$("tmenu").classList.remove("open");}
