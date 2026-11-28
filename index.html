@@ -764,6 +764,7 @@
 
 <div class="modal" id="tut" role="dialog" aria-modal="true" aria-label="How to play"><div class="card tut" id="tutCard"></div></div>
 <div class="modal" id="acct" role="dialog" aria-modal="true" aria-label="Profile and data"><div class="card" id="acctCard"></div></div>
+<div class="modal" id="appM" role="dialog" aria-modal="true" aria-label="Pylon Daily as an app"><div class="card tut" id="appCard"></div></div>
 <div class="modal" id="remM" role="dialog" aria-modal="true" aria-label="Daily reminder"><div class="card" id="remCard"></div></div>
 
 <script>
@@ -2317,7 +2318,7 @@ function goHome(){
   }
   clearInterval(timer);live=false;paused=false;
   closeAc();
-  $("acct").classList.remove("open");$("tut").classList.remove("open");$("remM").classList.remove("open");
+  $("acct").classList.remove("open");$("tut").classList.remove("open");$("appM").classList.remove("open");$("remM").classList.remove("open");
   $("fmenu").classList.remove("open");$("tmenu").classList.remove("open");
   intro();
   scrollTo({top:0,behavior:"smooth"});
@@ -2685,18 +2686,64 @@ async function showPct(date){
 /* ---------- daily reminder: a home-screen icon and/or a repeating calendar event. Nothing is sent anywhere. ---------- */
 let installEvt=null;
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;});
-addEventListener("appinstalled",()=>{installEvt=null;if($("remM").classList.contains("open")) paintRemind();});
+addEventListener("appinstalled",()=>{installEvt=null;if($("remM").classList.contains("open")) paintRemind();if($("appM").classList.contains("open")) paintApp();});
 const isStandalone=()=>!!((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone);
 const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 function remTime(){let t="09:00";try{t=localStorage.getItem("hm-remind")||t;}catch(e){}return /^\d\d:\d\d$/.test(t)?t:"09:00";}
+// the steps for this device, for when the browser can't install it with one tap (iPhone, Firefox, Safari on a Mac…)
+function installSteps(){
+  if(isIOS()) return `<div class="remsteps"><b>On iPhone:</b> tap <b>Share</b> (the square with an arrow) at the bottom of Safari, scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</div>`;
+  if(/Android/i.test(navigator.userAgent)) return `<div class="remsteps"><b>On Android:</b> tap the browser menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
+  return `<div class="remsteps"><b>On a computer:</b> click the install icon at the right of the address bar, or open the browser menu and pick <b>Install Pylon Daily</b> (Chrome and Edge). On a Mac in Safari: <b>File → Add to Dock</b>.</div>`;
+}
+// how to add the game to the home screen on this device ("" when it's already there)
+function installHTML(btnId){
+  if(isStandalone()) return `<p>✓ Pylon Daily is already on your home screen.</p>`;
+  if(installEvt) return `<div class="remrow"><button id="${btnId}">📲 ADD TO HOME SCREEN</button></div>`;
+  if(isIOS()) return `<div class="remsteps">In Safari, tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.</div>`;
+  return `<div class="remsteps">Open your browser's menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
+}
+/* one-time announcement: Pylon Daily works as an app from the home screen (no app store) */
+const APP_KEY="hm-app-notice";
+function paintApp(){
+  $("appCard").innerHTML=`<button class="ghost x" id="appX" aria-label="Close">✕</button>
+    <div class="tstep">NEW</div>
+    <h2>📲 PYLON DAILY IS NOW AN APP</h2>
+    <div class="tbody">
+      <p>Put it on your home screen and it opens in <b>one tap</b>, full screen, just like an app. No app store, no download, nothing to sign up for.</p>
+      ${isStandalone()?`<p>✓ Pylon Daily is already on your home screen.</p>`:`
+      <div class="remrow" style="justify-content:center;margin:4px 0 2px"><button id="appInstall">📲 GET THE APP</button></div>
+      <div id="appSteps" hidden>${installSteps()}</div>`}
+      <p class="tsmall" style="margin-top:12px">Free, and it updates itself. Want a nudge each day too? Tap <b>🔔 Remind me</b> on the start screen.</p>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="ghost small" id="appLater">GOT IT</button></div>`;
+}
+function maybeAppNotice(){
+  let seen=true; try{seen=localStorage.getItem(APP_KEY)==="1"||localStorage.getItem(TUT_KEY)!=="1";}catch(e){}
+  if(seen||isStandalone()) return;
+  setTimeout(()=>{
+    if(live||document.querySelector(".modal.open")||(daily&&!over)) return;   // never on top of a play or another window
+    try{localStorage.setItem(APP_KEY,"1");}catch(e){}
+    paintApp();$("appM").classList.add("open");$("appLater").focus();
+  },700);
+}
+const closeApp=()=>$("appM").classList.remove("open");
+$("appM").addEventListener("click",async e=>{
+  const id=e.target.id;
+  if(id==="appM"||id==="appX"||id==="appLater") return closeApp();
+  if(id==="appInstall"){
+    // one tap where the browser allows it; otherwise show this device's steps right under the button
+    if(installEvt){installEvt.prompt();let r=null;try{r=await installEvt.userChoice;}catch(err){}installEvt=null;
+      if(r&&r.outcome==="accepted") return closeApp();
+      paintApp();}
+    const st=$("appSteps"); if(st){st.hidden=false;e.target.textContent="📲 HOW TO ADD IT";}
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("appM").classList.contains("open")) closeApp();});
 function paintRemind(){
   const times=[];for(let h=5;h<=23;h++) for(const m of ["00","30"]){const v=String(h).padStart(2,"0")+":"+m;
     times.push(`<option value="${v}">${(h%12)||12}:${m} ${h<12?"AM":"PM"}</option>`);}
-  let home;
-  if(isStandalone()) home=`<p>✓ Pylon Daily is already on your home screen.</p>`;
-  else if(installEvt) home=`<div class="remrow"><button id="remInstall">📲 ADD TO HOME SCREEN</button></div>`;
-  else if(isIOS()) home=`<div class="remsteps">In Safari, tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.</div>`;
-  else home=`<div class="remsteps">Open your browser's menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
+  const home=installHTML("remInstall");
   $("remCard").innerHTML=`<button class="ghost x" id="remX" aria-label="Close">✕</button>
     <h2>🔔 DON'T LOSE YOUR STREAK</h2>
     <p>A new Daily Drive is out every day at 5 a.m. Eastern. Pick a way to remember it.</p>
@@ -3052,6 +3099,7 @@ paintFooter();
 paintSuggest();
 intro();
 maybeTutorial();
+maybeAppNotice();
 refreshData();
 </script>
 </body>
