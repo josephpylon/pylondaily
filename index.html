@@ -113,7 +113,10 @@
   .topbar{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:20}
   .topbar>button,.fieldpick>button{padding:7px 11px;font-size:11px;letter-spacing:.12em}
   /* daily streak: flame + days in a row; grey until there is a streak */
-  .streakbtn{display:flex;align-items:center;gap:4px;font-size:13px!important;letter-spacing:0!important}
+  /* the streak counter is display-only (stats live in the 👤 profile) */
+  .streakbtn{display:flex;align-items:center;gap:4px;font-size:13px;border:2px solid var(--line);padding:7px 11px;cursor:default;user-select:none}
+  @media (pointer:coarse){.streakbtn{min-height:40px}}
+  @media (max-width:400px){.streakbtn{padding:7px 8px}}
   .streakbtn b{font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums}
   .streakbtn.zero{filter:grayscale(1);opacity:.6}
   .streakbtn.zero b{color:var(--dim)}
@@ -260,6 +263,7 @@
   .card p b{color:var(--chalk)}
   .card .x{position:absolute;top:12px;right:12px;padding:4px 9px;font-size:12px}
   .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .row[hidden]{display:none}
   .small{padding:6px 10px;font-size:11px;letter-spacing:.1em}
   .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
   .stat{background:var(--surface2);border:1px solid var(--line);padding:9px 6px;text-align:center}
@@ -509,6 +513,15 @@
   /* beginner-friendly: no settings until today's Daily is done, and none during any Daily drive */
   body.simple .setbox{display:none}
 
+  .special{margin:0 auto 14px;max-width:440px;border:2px dashed #d9822b;background:var(--surface2);padding:10px 12px;text-align:left}
+  .special b{display:block;font-size:12px;letter-spacing:.14em;color:#e8913a}
+  .special span{display:block;font-size:12px;color:var(--paper);line-height:1.6;margin-top:4px}
+  /* ---------- reminders ---------- */
+  .remrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .remrow select{background:var(--input);color:var(--chalk);border:2px solid var(--line2);font:inherit;font-size:14px;padding:8px 10px}
+  .remsteps{font-size:12px;color:var(--paper);line-height:1.7;margin-top:8px}
+  .remsteps b{color:var(--chalk)}
+
   /* ---------- unlimited ---------- */
   .unlpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px auto 4px;max-width:480px}
   .unlcard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--surface2);color:var(--paper);
@@ -613,8 +626,7 @@
   <button class="ghost acctbtn" id="acctBtn" aria-haspopup="dialog" aria-label="Profile">👤 <span class="lbl">SIGN IN</span></button>
 </div>
 <div class="topbar">
-  <button class="ghost streakbtn" id="streakBtn" aria-haspopup="dialog" title="Daily streak">🔥<b id="streakN">0</b></button>
-  <button class="ghost" id="statsBtn" aria-haspopup="dialog" aria-label="Daily stats" title="Daily stats">📊</button>
+  <div class="streakbtn" id="streakBtn" role="img" title="Daily streak">🔥<b id="streakN">0</b></div>
   <button class="ghost" id="helpBtn" aria-label="How to play">?</button>
   <div class="fieldpick">
     <button class="ghost" id="fieldBtn" aria-haspopup="true" aria-label="Choose field colour"><i class="sw" id="fieldSw"></i><span class="lbl">FIELD</span></button>
@@ -752,7 +764,7 @@
 
 <div class="modal" id="tut" role="dialog" aria-modal="true" aria-label="How to play"><div class="card tut" id="tutCard"></div></div>
 <div class="modal" id="acct" role="dialog" aria-modal="true" aria-label="Profile and data"><div class="card" id="acctCard"></div></div>
-<div class="modal" id="statsM" role="dialog" aria-modal="true" aria-label="Daily stats"><div class="card" id="statsCard"></div></div>
+<div class="modal" id="remM" role="dialog" aria-modal="true" aria-label="Daily reminder"><div class="card" id="remCard"></div></div>
 
 <script>
 // Season lines: name,team,games,full-PPR total,standard total. Half-PPR is the midpoint of the two.
@@ -805,7 +817,15 @@ const teamSet=()=>oneTeam()?[team]:DIVS[team.slice(2)];
 const teamLabel=()=>oneTeam()?TEAM_NAMES[team]:team.slice(2);
 // in force? Not in Passing (too few quarterbacks), and one team has too few runners for Rushing (divisions work)
 const tm=()=>!!team&&scoring!=="pass"&&!(scoring==="rush"&&oneTeam());
-const keep=a=>rk()?a.filter(p=>ROOKIES.has(p[0])):tm()?a.filter(p=>teamSet().includes(p[1])):a;
+// Special Dailies: on these dates the Daily only uses players from the listed teams. The dates and teams are fixed here,
+// so every device still deals the same drive.
+const SPECIAL_DAYS={
+  "2026-11-26":{name:"THANKSGIVING",emoji:"🦃",teams:["CHI","DET","PHI","DAL","KC","BUF"],
+    games:"Bears at Lions, Eagles at Cowboys and Chiefs at Bills",teamWords:"Bears, Lions, Eagles, Cowboys, Chiefs and Bills"}
+};
+let special=null;   // the special Daily in force right now (only while a Daily or its replay is on screen)
+const specialFor=d=>SPECIAL_DAYS[d]||null;
+const keep=a=>special?a.filter(p=>special.teams.includes(p[1])):rk()?a.filter(p=>ROOKIES.has(p[0])):tm()?a.filter(p=>teamSet().includes(p[1])):a;
 const filterTag=()=>rk()?" · ROOKIES":tm()?" · "+teamLabel().toUpperCase():"";
 const filterWords=()=>rk()?"rookies only":tm()?teamLabel()+" only":"";
 // what the number means, in prompts and results
@@ -1040,13 +1060,14 @@ function nextPlay(){
   paintBoard();
   const pill=`<span class="pos-pill ${allowed.length>1?(slot==="FLEX"?"flex":"sflex"):""}">${slot}</span>`;
   $("panel").innerHTML=`
-    <div class="plabel">${daily?`DAILY DRIVE #${daily.no}${practice?(daily.date===todayET()?" REPLAY (DOESN'T COUNT)":" · REPLAY (DOESN'T COUNT)"):""} · `
+    <div class="plabel">${daily?`${special?special.emoji+" "+special.name+" ":""}DAILY DRIVE #${daily.no}${practice?(daily.date===todayET()?" REPLAY (DOESN'T COUNT)":" · REPLAY (DOESN'T COUNT)"):""} · `
       :pnp?`MULTIPLAYER · ${esc(pnp.p[pnp.cur].name)} · `
       :unl?`UNLIMITED ∞ · ${SCORING[scoring].label}${filterTag()} · `
       :`<span class="modetag">${mode.toUpperCase()} · ${SCORING[scoring].label}${filterTag()} · </span>`}PLAY ${play}${pnp||unl?"":` OF ${PLAYS}`}</div>
     <div class="prompt">Name a ${pill} averaging closest to
       <b>${target.toFixed(1)}</b> ${unitLong()} per game this season.</div>
     ${slotHint(slot)?`<div class="hint">${slotHint(slot)}</div>`:""}
+    ${special?`<div class="hint">${special.emoji} ${special.teamWords} only</div>`:""}
     <div class="entry">
       <div class="acwrap">
         <input type="text" id="ans" placeholder="start typing a player…" autocomplete="off" spellcheck="false">
@@ -1160,9 +1181,10 @@ function saveDaily(){if(practice) return;try{localStorage.setItem(DAILY_KEY,JSON
 // A replay of today's Daily Drive: same seven plays and rules, but nothing is saved, shared or counted.
 let practice=false;
 // the Daily's fixed rules: Standard clock, Full PPR, full player pool. The player's own settings come back after.
-function enterDailyRules(){
+function enterDailyRules(date){
   prefs={mode,scoring,rookie,team};
-  const rebuild=scoring!=="ppr"||rookie||!!team;
+  special=specialFor(date);
+  const rebuild=scoring!=="ppr"||rookie||!!team||!!special;
   mode="standard";scoring="ppr";rookie=false;team="";
   if(rebuild) buildPool();
   paintMode();paintScoring();paintExtras();
@@ -1177,7 +1199,7 @@ const yesterdayET=()=>addDays(todayET(),-1);
 function replayDaily(date){
   endDaily();
   pnp=null;unl=null;paintPnpBar();
-  enterDailyRules();
+  enterDailyRules(date);
   practice=true;
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
   dstate={date,plays:[],shown:0,done:false};
@@ -1189,8 +1211,9 @@ function replayDaily(date){
 function endDaily(){
   if(!daily) return;
   daily=null;dstate=null;practice=false;
+  const hadSpecial=!!special; special=null;
   if(prefs){
-    const rebuild=prefs.scoring!==scoring||prefs.rookie!==rookie||(prefs.team||"")!==team;
+    const rebuild=hadSpecial||prefs.scoring!==scoring||prefs.rookie!==rookie||(prefs.team||"")!==team;
     mode=prefs.mode;scoring=prefs.scoring;rookie=prefs.rookie;team=prefs.team||"";
     if(rebuild) buildPool();
     prefs=null;paintMode();paintScoring();paintExtras();
@@ -1200,7 +1223,7 @@ function startDaily(){
   endDaily();
   pnp=null;unl=null;paintPnpBar();
   const date=todayET();
-  enterDailyRules();
+  enterDailyRules(date);
   daily={date,no:dailyNo(date),plan:dailyPlan(date)};
   dstate=loadDaily()||{date,plays:[],shown:0,done:false};
   yards=0;play=0;tdPlay=0;bonus=0;celebrated=false;pickSix=false;used=new Set();over=false;live=false;paused=false;
@@ -1228,7 +1251,7 @@ function dailyEmoji(){
 }
 function shareText(){
   const n=dstate.plays.length, td=yards>=GOAL;
-  return `🏈 Pylon Daily #${daily.no}\n`+
+  return `🏈 Pylon Daily #${daily.no}${special?` ${special.emoji} ${special.name[0]+special.name.slice(1).toLowerCase()}`:""}\n`+
     (td?`TOUCHDOWN in ${tdPlay} play${tdPlay>1?"s":""}`+(bonus?` · +${bonus} bonus yards`:""):`${yards} yards in ${n} plays`)+
     `\n${dailyEmoji()}`+(streaks().cur>=2?`\n🔥 ${streaks().cur}-day streak`:"")+(SHARE_URL?`\n${SHARE_URL}`:"");
 }
@@ -1236,7 +1259,7 @@ function shareText(){
 function challengeText(){
   const td=yards>=GOAL;
   return `🏈 I ${td?`scored a TOUCHDOWN in ${tdPlay} play${tdPlay>1?"s":""}`+(bonus?` (+${bonus} bonus yards)`:""):`drove ${yards} yards`}`+
-    ` on Pylon Daily #${daily.no}. Can you beat me?\nhttps://pylondaily.com`;
+    ` on the Pylon Daily #${daily.no}${special?` ${special.name[0]+special.name.slice(1).toLowerCase()} special ${special.emoji}`:""}. Can you beat me?\nhttps://pylondaily.com`;
 }
 async function shareDaily(t){
   const text=typeof t==="string"?t:shareText(), msg=$("shareMsg");
@@ -1372,9 +1395,8 @@ const TUT=[
   {t:"THE BUTTONS UP TOP",b:`<p>Everything you need is in the corners of the screen.</p>
      <div class="tkeys">
        <div><span class="key">🏠</span><span><b>Home:</b> back to the start screen from any game (not during the Daily).</span></div>
-       <div><span class="key">👤</span><span><b>Profile:</b> sign in with a name to keep your stats on this device. You can change the name any time.</span></div>
-       <div><span class="key">🔥</span><span><b>Streak:</b> how many days in a row you've finished the Daily.</span></div>
-       <div><span class="key">📊</span><span><b>Stats:</b> your streaks and how each Daily went.</span></div>
+       <div><span class="key">👤</span><span><b>Profile:</b> <b>your stats live here</b>: your Daily streak, how each Daily went and your Unlimited bests. Sign in with a name to track every drive too (you can change the name any time).</span></div>
+       <div><span class="key">🔥</span><span><b>Streak:</b> how many days in a row you've finished the Daily. Miss a day and it starts again.</span></div>
        <div><span class="key">?</span><span><b>How to play:</b> opens this guide again any time.</span></div>
        <div><span class="key"><i class="sw" style="background:#1f6b33"></i></span><span><b>Field color:</b> green, blue or red turf.</span></div>
        <div><span class="key">☾</span><span><b>Theme:</b> Christmas (for the holidays), dark or light. The same menu turns <b>sound</b> on or off, switches on <b>bold text</b> for easier reading, and controls string lights in Christmas.</span></div>
@@ -1386,6 +1408,7 @@ const TUT=[
        <div><span class="key">🤝</span><span><b>Challenge a friend:</b> sends your score with a dare and the link.</span></div>
        <div><span class="key">🔥</span><span><b>Your streak</b>, and how many of today's players you beat.</span></div>
        <div><span class="key">⏱</span><span><b>A countdown</b> to the next Daily Drive.</span></div>
+       <div><span class="key">🔔</span><span><b>Remind me:</b> a daily calendar alert or a home-screen icon, so your streak doesn't slip.</span></div>
      </div>`},
   {t:"AFTER THE DAILY",b:`<p>Finishing the Daily unlocks <b>unlimited free play</b>. Tap <b>⚙ Game settings</b> above the field to change:</p>
      <div class="tkeys">
@@ -1555,7 +1578,9 @@ function paintAcct(){
         <input type="text" id="acctName" maxlength="20" placeholder="your name" autocomplete="off" spellcheck="false">
         <button id="acctGo">SIGN IN</button>
       </div>
-      <div class="note" id="acctNote"></div>`;
+      <div class="note" id="acctNote"></div>
+      ${dailyStatsHTML()}
+      <div class="savehint">Sign in to also track every drive: free play, Unlimited and the Daily.</div>`;
     if(others.length) h+=`<h3>PROFILES ON THIS DEVICE</h3><div class="row" style="margin-top:0">`+
       others.map(o=>`<button class="ghost small" data-p="${esc(o.name)}">${esc(o.name)}</button>`).join("")+`</div>`;
   }else{
@@ -1569,6 +1594,8 @@ function paintAcct(){
         <button class="ghost small" id="acctRenameX">CANCEL</button>
       </div>
       <div class="note" id="renameNote" style="margin-top:-6px"></div>
+      ${dailyStatsHTML()}
+      <h3>🏈 ALL DRIVES</h3>
       <div class="statgrid">
         ${cell("DRIVES",s.drives)}${cell("TOUCHDOWNS",s.tds)}${cell("TD RATE",pct)}
         ${cell("BEST DRIVE",s.best+" yd")}${cell("FEWEST PLAYS TO SCORE",s.fewest||"–")}${cell("HOUSE CALLS",s.perfect)}
@@ -1611,6 +1638,7 @@ function openAcct(){
   if(live&&!paused&&clockSecs()) pause();   // don't burn the clock while the panel is open
   paintAcct();
   $("acct").classList.add("open");
+  if(hist[todayET()]) showPct(todayET());
   const n=$("acctName"); if(n) n.focus(); else $("acctX").focus();
 }
 function closeAcct(){$("acct").classList.remove("open");}
@@ -1660,6 +1688,17 @@ document.addEventListener("keydown",e=>{
 });
 
 /* ---------- start screen ---------- */
+// a coming (or today's) special Daily, announced on the start screen up to five days ahead
+function specialBanner(){
+  const t=todayET();
+  for(let i=0;i<=5;i++){
+    const d=addDays(t,i), sp=specialFor(d); if(!sp) continue;
+    const day=new Date(d+"T12:00:00Z").toLocaleDateString("en-US",{weekday:"long",timeZone:"UTC"});
+    return `<div class="special"><b>${sp.emoji} ${i===0?`TODAY: ${sp.name} DAILY`:`COMING ${i===1?"TOMORROW":day.toUpperCase()}: ${sp.name} DAILY`}</b>
+      <span>${i===0?"Today's":`${day}'s`} Daily only uses players from ${sp.games}.</span></div>`;
+  }
+  return "";
+}
 function intro(nudge){
   endDaily();
   if(pendingData){const d=pendingData;pendingData=null;applyData(d);}
@@ -1672,6 +1711,7 @@ function intro(nudge){
   const free = mode==="learning" ? "no clock, averages listed in the player pool" : `${clockSecs()} seconds a play`;
   $("panel").innerHTML=`
     <div class="res">
+      ${specialBanner()}
       <div class="tier" style="color:var(--chalk)">${done?"FREE PLAY UNLOCKED":"TODAY'S DRIVE"}</div>
       <div class="rules">
         ${done
@@ -1691,6 +1731,7 @@ function intro(nudge){
         <button class="linkbtn" id="dailyGo">Today's result</button>
         <button class="linkbtn" id="redoGo">Redo the Daily</button>
         ${dailyNo(yesterdayET())>=1?`<button class="linkbtn" id="yestGo">Yesterday's Daily</button>`:""}
+        <button class="linkbtn" id="remLink">🔔 Remind me</button>
         <button class="linkbtn" id="howLink">How to play</button>
       </div>`
       :`<div class="entry" style="justify-content:center;flex-wrap:wrap">
@@ -1700,7 +1741,7 @@ function intro(nudge){
         <button class="ghost" id="pnpGo" disabled title="Finish today's Daily Drive first">🔒 MULTIPLAYER</button>
       </div>`}
       <div class="note" id="note" style="text-align:center">${nudge&&!done?"Finish today's Daily Drive to unlock free play.":""}</div>
-      ${done?"":`<div class="links"><button class="linkbtn" id="howLink">How to play</button></div>`}
+      ${done?"":`<div class="links"><button class="linkbtn" id="remLink">🔔 Remind me</button><button class="linkbtn" id="howLink">How to play</button></div>`}
     </div>`;
   $("dailyGo").onclick=startDaily;
   if($("redoGo")) $("redoGo").onclick=redoDaily;
@@ -1709,6 +1750,7 @@ function intro(nudge){
   $("pnpGo").onclick=pnpSetup;
   $("unlGo").onclick=unlSetup;
   $("howLink").onclick=openTut;
+  $("remLink").onclick=openRemind;
   paintSimple();paintCd();paintStreak();
   (done?$("go"):$("dailyGo")).focus();
 }
@@ -1911,6 +1953,10 @@ function submit(){
   const raw=$("ans").value.trim();
   if(!raw) return nudge("Type a player name first.");
   const hit=find(raw);
+  if(!hit&&special){
+    const v=find(raw,ALL);
+    if(v&&!v.many) return nudge(`${v.p[0]} plays for ${v.p[1]}. Today's Daily is ${special.teamWords} only.`);
+  }
   if(!hit&&rk()){
     const v=find(raw,ALL);
     if(v&&!v.many) return nudge(`${v.p[0]} isn't a rookie. Rookies Only uses the 2026 rookie class.`);
@@ -2110,16 +2156,18 @@ function finish(scored,replay){
       <div class="nextdaily"><small>NEXT DAILY DRIVE IN</small><b class="cd"></b></div>
       <div class="links">
         <button class="linkbtn" id="challenge">Challenge a friend</button>
-        <button class="linkbtn" id="statsGo">Stats</button>
+        <button class="linkbtn" id="statsGo">Your stats</button>
         <button class="linkbtn" id="redo">Redo the Daily</button>
+        <button class="linkbtn" id="remGo">🔔 Remind me</button>
       </div>
       <div class="savehint">${me()?`Saved to ${esc(me().name)}'s profile.`:""}</div>
     </div>`;
     paintCd();
     $("shareBtn").onclick=()=>shareDaily();
     $("challenge").onclick=()=>shareDaily(challengeText());
-    $("statsGo").onclick=openStats;
+    $("statsGo").onclick=openAcct;
     $("redo").onclick=redoDaily;
+    $("remGo").onclick=openRemind;
     // straight into a free-play drive with the player's own settings (one tap, not via the start screen)
     $("free").onclick=start;
     $("freeMp").onclick=pnpSetup;
@@ -2269,7 +2317,7 @@ function goHome(){
   }
   clearInterval(timer);live=false;paused=false;
   closeAc();
-  $("acct").classList.remove("open");$("statsM").classList.remove("open");$("tut").classList.remove("open");
+  $("acct").classList.remove("open");$("tut").classList.remove("open");$("remM").classList.remove("open");
   $("fmenu").classList.remove("open");$("tmenu").classList.remove("open");
   intro();
   scrollTo({top:0,behavior:"smooth"});
@@ -2634,36 +2682,90 @@ async function showPct(date){
   document.querySelectorAll(".pct-today").forEach(el=>{el.innerHTML=el.classList.contains("solo")?txt.charAt(0).toUpperCase()+txt.slice(1):txt;});
 }
 
-/* ---------- stats panel ---------- */
-function paintStats(){
+/* ---------- daily reminder: a home-screen icon and/or a repeating calendar event. Nothing is sent anywhere. ---------- */
+let installEvt=null;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;});
+addEventListener("appinstalled",()=>{installEvt=null;if($("remM").classList.contains("open")) paintRemind();});
+const isStandalone=()=>!!((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone);
+const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function remTime(){let t="09:00";try{t=localStorage.getItem("hm-remind")||t;}catch(e){}return /^\d\d:\d\d$/.test(t)?t:"09:00";}
+function paintRemind(){
+  const times=[];for(let h=5;h<=23;h++) for(const m of ["00","30"]){const v=String(h).padStart(2,"0")+":"+m;
+    times.push(`<option value="${v}">${(h%12)||12}:${m} ${h<12?"AM":"PM"}</option>`);}
+  let home;
+  if(isStandalone()) home=`<p>✓ Pylon Daily is already on your home screen.</p>`;
+  else if(installEvt) home=`<div class="remrow"><button id="remInstall">📲 ADD TO HOME SCREEN</button></div>`;
+  else if(isIOS()) home=`<div class="remsteps">In Safari, tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.</div>`;
+  else home=`<div class="remsteps">Open your browser's menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
+  $("remCard").innerHTML=`<button class="ghost x" id="remX" aria-label="Close">✕</button>
+    <h2>🔔 DON'T LOSE YOUR STREAK</h2>
+    <p>A new Daily Drive is out every day at 5 a.m. Eastern. Pick a way to remember it.</p>
+    <h3>📅 DAILY CALENDAR REMINDER</h3>
+    <p>Adds a repeating event, with an alert, to your calendar app.</p>
+    <div class="remrow"><select id="remT" aria-label="Reminder time">${times.join("")}</select>
+      <button id="remIcs">ADD TO CALENDAR</button>
+      <button class="ghost small" id="remG">GOOGLE CALENDAR</button></div>
+    <h3>📲 HOME SCREEN ICON</h3>
+    <p>Opens Pylon Daily in one tap, like an app.</p>
+    ${home}
+    <div class="savehint">Nothing is sent anywhere: the reminder lives in your own calendar.</div>`;
+  $("remT").value=remTime();
+}
+function remSave(){try{localStorage.setItem("hm-remind",$("remT").value);}catch(e){}}
+// the next day at the chosen time, as a floating local time (YYYYMMDDTHHMMSS)
+function remStamp(t,mins){
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(+t.slice(0,2),+t.slice(3)+(mins||0),0,0);
+  const z=v=>String(v).padStart(2,"0");
+  return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}T${z(d.getHours())}${z(d.getMinutes())}00`;
+}
+function remIcs(){
+  remSave();const t=$("remT").value, now=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Pylon Daily//Reminder//EN","BEGIN:VEVENT",
+    "UID:pylon-daily-reminder-"+Date.now()+"@pylondaily.com","DTSTAMP:"+now,"DTSTART:"+remStamp(t),"DTEND:"+remStamp(t,10),
+    "RRULE:FREQ=DAILY","SUMMARY:🏈 Pylon Daily: today's drive is up","DESCRIPTION:Keep your streak going: https://pylondaily.com",
+    "URL:https://pylondaily.com","BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Pylon Daily","TRIGGER:PT0M","END:VALARM",
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="pylon-daily-reminder.ics";
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+function remGoogle(){
+  remSave();const t=$("remT").value;
+  const u="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent("🏈 Pylon Daily: today's drive is up")+
+    "&dates="+remStamp(t)+"/"+remStamp(t,10)+"&recur="+encodeURIComponent("RRULE:FREQ=DAILY")+
+    "&details="+encodeURIComponent("Keep your streak going: https://pylondaily.com");
+  window.open(u,"_blank","noopener");
+}
+function openRemind(){
+  if(live&&!paused&&clockSecs()) pause();
+  paintRemind();$("remM").classList.add("open");$("remX").focus();
+}
+$("remM").addEventListener("click",async e=>{
+  const id=e.target.id;
+  if(id==="remM"||id==="remX") return $("remM").classList.remove("open");
+  if(id==="remIcs") return remIcs();
+  if(id==="remG") return remGoogle();
+  if(id==="remInstall"&&installEvt){installEvt.prompt();try{await installEvt.userChoice;}catch(err){}installEvt=null;paintRemind();}
+});
+$("remM").addEventListener("change",e=>{if(e.target.id==="remT") remSave();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("remM").classList.contains("open")) $("remM").classList.remove("open");});
+
+/* ---------- Daily stats, shown in the 👤 profile panel (no separate stats page) ---------- */
+function dailyStatsHTML(){
   const days=Object.keys(hist).sort(), n=days.length, tds=days.filter(d=>hist[d].td).length;
   const {cur,best}=streaks(), today=hist[todayET()];
   const cell=(k,v)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
   const buckets=[3,4,5,6,7].map(k=>({k:`TD IN ${k}`,c:days.filter(d=>hist[d].td&&hist[d].plays===k).length,on:!!(today&&today.td&&today.plays===k)}));
   buckets.push({k:"NO TD",c:n-tds,on:!!(today&&!today.td)});
   const max=Math.max(1,...buckets.map(b=>b.c));
-  $("statsCard").innerHTML=`<button class="ghost x" id="statsX" aria-label="Close">✕</button>
-    <h2>STATS</h2>
-    <div class="statgrid four">${cell("PLAYED",n)}${cell("TD %",n?Math.round(tds/n*100):"–")}${cell("STREAK",cur)}${cell("BEST",best)}</div>
+  const u=unlBest();
+  return `<h3>📅 DAILY DRIVE</h3>
+    <div class="statgrid four">${cell("PLAYED",n)}${cell("TD %",n?Math.round(tds/n*100):"–")}${cell("🔥 STREAK",cur)}${cell("BEST STREAK",best)}</div>
     ${today?`<div class="subline" style="text-align:center"><span class="pct-today solo"></span></div>`:""}
-    <h3>DAILY RESULTS</h3>
-    ${n?`<div class="dist">${buckets.map(b=>`<div class="b${b.on?" today":""}"><span>${b.k}</span><i style="width:${Math.max(6,b.c/max*100)}%">${b.c}</i></div>`).join("")}</div>`
-       :`<p>Finish a Daily Drive and your results show up here.</p>`}`;
-  if(today) showPct(todayET());
+    ${n?`<div class="dist" style="margin-top:10px">${buckets.map(b=>`<div class="b${b.on?" today":""}"><span>${b.k}</span><i style="width:${Math.max(6,b.c/max*100)}%">${b.c}</i></div>`).join("")}</div>`
+       :`<p style="margin-top:8px">Finish a Daily Drive and your results show up here.</p>`}
+    ${u.strikes||u.endless?`<div class="subline">∞ Unlimited bests: ${u.strikes?`<b>${u.strikes} TD${u.strikes===1?"":"s"}</b> in 3 Strikes`:""}${u.strikes&&u.endless?" · ":""}${u.endless?`<b>${u.endless} TD${u.endless===1?"":"s"}</b> in No Limit`:""}</div>`:""}`;
 }
-function openStats(){
-  if(live&&!paused&&clockSecs()) pause();
-  paintStats();
-  $("statsM").classList.add("open");
-  $("statsX").focus();
-}
-function closeStats(){$("statsM").classList.remove("open");}
-$("statsBtn").onclick=openStats;
-$("streakBtn").onclick=openStats;
-$("statsM").addEventListener("click",e=>{
-  if(e.target.id==="statsM"||e.target.id==="statsX") return closeStats();
-});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("statsM").classList.contains("open")) closeStats();});
 
 /* ---------- Rookies Only checkbox ---------- */
 function paintExtras(){
@@ -2926,7 +3028,7 @@ function devResetDaily(){
   const t=todayET();
   try{localStorage.removeItem(DAILY_KEY);}catch(e){}
   delete hist[t];saveHist();delete pctMemo[t];
-  closeAcct();closeStats();
+  closeAcct();
   intro();
   scrollTo({top:0,behavior:"smooth"});
 }
