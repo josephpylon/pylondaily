@@ -516,6 +516,7 @@
   .special{margin:0 auto 14px;max-width:440px;border:2px dashed #d9822b;background:var(--surface2);padding:10px 12px;text-align:left}
   .special b{display:block;font-size:12px;letter-spacing:.14em;color:#e8913a}
   .special span{display:block;font-size:12px;color:var(--paper);line-height:1.6;margin-top:4px}
+  .special span b{display:inline;font-size:inherit;letter-spacing:0;color:var(--chalk)}
   /* ---------- reminders ---------- */
   .remrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
   .remrow select{background:var(--input);color:var(--chalk);border:2px solid var(--line2);font:inherit;font-size:14px;padding:8px 10px}
@@ -1396,7 +1397,7 @@ const TUT=[
   {t:"THE BUTTONS UP TOP",b:`<p>Everything you need is in the corners of the screen.</p>
      <div class="tkeys">
        <div><span class="key">🏠</span><span><b>Home:</b> back to the start screen from any game (not during the Daily).</span></div>
-       <div><span class="key">👤</span><span><b>Profile:</b> <b>your stats live here</b>: your Daily streak, how each Daily went and your Unlimited bests. Sign in with a name to track every drive too (you can change the name any time).</span></div>
+       <div><span class="key">👤</span><span><b>Profile:</b> <b>your stats live here</b>: your Daily streak, how each Daily went and your Unlimited bests. Sign in with a name to track every drive too (you can change the name any time). <b>Move your progress</b> there brings your streak to another browser or the iPhone app.</span></div>
        <div><span class="key">🔥</span><span><b>Streak:</b> how many days in a row you've finished the Daily. Miss a day and it starts again.</span></div>
        <div><span class="key">?</span><span><b>How to play:</b> opens this guide again any time.</span></div>
        <div><span class="key"><i class="sw" style="background:#1f6b33"></i></span><span><b>Field color:</b> green, blue or red turf.</span></div>
@@ -1622,7 +1623,20 @@ function paintAcct(){
       <div class="savehint">Reset today's Daily lets you play it again for real. Start fresh wipes everything this game
         saved on this device (profiles, stats, settings, the tutorial) and reloads, so it opens like a first visit.</div>`;
   }
-  h+=`<h3>HELP IMPROVE THE GAME</h3>
+  h+=`<h3>📲 MOVE YOUR PROGRESS</h3>
+    <p>Playing in a new browser, or in the home-screen app on iPhone? Copy your progress here and paste it there:
+      your streak, Daily results, profiles and settings come along.</p>
+    <div class="row">
+      <button class="ghost small" id="moveCopy">COPY MY PROGRESS</button>
+      <button class="ghost small" id="movePasteOpen">PASTE PROGRESS</button>
+    </div>
+    <div id="movePasteRow" hidden>
+      <textarea id="moveIn" aria-label="Progress code" placeholder="paste your progress code here" style="height:80px"></textarea>
+      <div class="row"><button class="small" id="moveLoad">LOAD IT</button><small style="font-size:10px;color:var(--dim)">This replaces what's saved here.</small></div>
+    </div>
+    <textarea id="moveOut" readonly hidden aria-label="Your progress code" style="height:80px"></textarea>
+    <div class="savehint" id="moveMsg" aria-live="polite"></div>
+    <h3>HELP IMPROVE THE GAME</h3>
     <label class="toggle"><input type="checkbox" id="shareT" ${save.share?"checked":""}>
       <span>Save anonymous play data. For each play it records the mode, the slot, the target number,
         the player picked, how far off it was, yards gained and seconds used. Your profile name is never included.</span></label>
@@ -1667,6 +1681,9 @@ $("acct").addEventListener("click",e=>{
     t.textContent=o.hidden?"SHOW DATA":"HIDE DATA";return;
   }
   if(t.id==="shareClear"){save.plays=[];persist();return paintAcct();}
+  if(t.id==="moveCopy") return moveCopy();
+  if(t.id==="movePasteOpen"){$("movePasteRow").hidden=false;$("moveIn").focus();return;}
+  if(t.id==="moveLoad") return moveLoad($("moveIn").value);
   if(t.id==="devDaily"){
     if(t.dataset.sure) return devResetDaily();
     t.dataset.sure="1";t.textContent="TAP AGAIN TO RESET";return;
@@ -1687,6 +1704,48 @@ $("acct").addEventListener("keydown",e=>{
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&$("acct").classList.contains("open")) closeAcct();
 });
+
+/* ---------- move your progress between browsers (e.g. Safari → the iPhone home-screen app, which has its own storage) ---------- */
+const MOVE_SKIP=new Set(["hm-id","hm-sg-last","hm-app-notice","hm-move-tip"]);
+function progressCode(){
+  const o={};
+  try{
+    Object.keys(localStorage).filter(k=>k.startsWith("hm-")&&!MOVE_SKIP.has(k)).forEach(k=>{o[k]=localStorage.getItem(k);});
+    if(o["hm-save-v1"]){const sv=JSON.parse(o["hm-save-v1"]);sv.plays=[];o["hm-save-v1"]=JSON.stringify(sv);}   // the play log stays behind
+  }catch(e){}
+  return "PD1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+}
+async function moveCopy(){
+  const code=progressCode(), msg=$("moveMsg");
+  try{await navigator.clipboard.writeText(code);msg.textContent="Copied! Now open Pylon Daily where you want it, go to 👤 Profile → Paste progress.";return;}catch(e){}
+  const o=$("moveOut");o.hidden=false;o.value=code;o.focus();o.select();
+  msg.textContent="Select the code below, copy it, and paste it in 👤 Profile → Paste progress on the other side.";
+}
+function moveLoad(raw){
+  const msg=$("moveMsg");let o=null;
+  try{const c=String(raw).trim();if(c.startsWith("PD1:")) o=JSON.parse(decodeURIComponent(escape(atob(c.slice(4)))));}catch(e){}
+  if(!o||typeof o!=="object"||!Object.keys(o).every(k=>k.startsWith("hm-")&&typeof o[k]==="string")){
+    msg.textContent="That code doesn't look right. Copy it again and paste the whole thing.";return;
+  }
+  const b=$("moveLoad");
+  if(!b.dataset.sure){b.dataset.sure="1";b.textContent="TAP AGAIN TO REPLACE";return;}
+  try{
+    Object.keys(localStorage).filter(k=>k.startsWith("hm-")&&!MOVE_SKIP.has(k)).forEach(k=>localStorage.removeItem(k));
+    for(const k in o) localStorage.setItem(k,o[k]);
+    localStorage.setItem("hm-move-tip","1");
+  }catch(e){msg.textContent="This browser won't let the game save anything, so it couldn't load.";return;}
+  location.reload();
+}
+// in the iPhone home-screen app with nothing saved yet: point to Move your progress once
+function moveTip(){
+  let off=true;
+  try{off=localStorage.getItem("hm-move-tip")==="1"||Object.keys(hist).length>0||Object.keys(save.profiles).length>0;}catch(e){}
+  if(off||!isStandalone()||!isIOS()) return "";
+  return `<div class="special" style="border-color:var(--gold)"><b style="color:var(--gold)">📲 PLAYED IN SAFARI BEFORE?</b>
+    <span>Bring your streak into the app: in Safari open <b>👤 Profile → Move your progress</b> and tap Copy, then come back here and tap
+      <b>👤 Profile → Paste progress</b>.</span>
+    <span style="margin-top:6px"><button class="linkbtn" id="moveTipX">Got it</button></span></div>`;
+}
 
 /* ---------- start screen ---------- */
 // a coming (or today's) special Daily, announced on the start screen up to five days ahead
@@ -1712,7 +1771,7 @@ function intro(nudge){
   const free = mode==="learning" ? "no clock, averages listed in the player pool" : `${clockSecs()} seconds a play`;
   $("panel").innerHTML=`
     <div class="res">
-      ${specialBanner()}
+      ${moveTip()||specialBanner()}
       <div class="tier" style="color:var(--chalk)">${done?"FREE PLAY UNLOCKED":"TODAY'S DRIVE"}</div>
       <div class="rules">
         ${done
@@ -1752,6 +1811,7 @@ function intro(nudge){
   $("unlGo").onclick=unlSetup;
   $("howLink").onclick=openTut;
   $("remLink").onclick=openRemind;
+  if($("moveTipX")) $("moveTipX").onclick=()=>{try{localStorage.setItem("hm-move-tip","1");}catch(e){}intro();};
   paintSimple();paintCd();paintStreak();
   (done?$("go"):$("dailyGo")).focus();
 }
@@ -2691,8 +2751,16 @@ const isStandalone=()=>!!((window.matchMedia&&matchMedia("(display-mode: standal
 const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 function remTime(){let t="09:00";try{t=localStorage.getItem("hm-remind")||t;}catch(e){}return /^\d\d:\d\d$/.test(t)?t:"09:00";}
 // the steps for this device, for when the browser can't install it with one tap (iPhone, Firefox, Safari on a Mac…)
+// where the Share button is: Safari has it in the bottom bar; Chrome, Firefox and Edge on iPhone put it by the address bar
+function iosShareWhere(){
+  return /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)
+    ? `tap <b>Share</b> (the square with an arrow) by the address bar`
+    : `tap <b>Share</b> (the square with an arrow) at the bottom of Safari`;
+}
 function installSteps(){
-  if(isIOS()) return `<div class="remsteps"><b>On iPhone:</b> tap <b>Share</b> (the square with an arrow) at the bottom of Safari, scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</div>`;
+  if(isIOS()) return `<div class="remsteps"><b>On iPhone:</b> ${iosShareWhere()}, scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</div>
+    <div class="remsteps" style="color:var(--dim)">The app keeps its own copy of your stats. To bring your streak along, open
+      <b>👤 Profile → Move your progress</b> here first and tap <b>Copy</b>, then paste it in the app.</div>`;
   if(/Android/i.test(navigator.userAgent)) return `<div class="remsteps"><b>On Android:</b> tap the browser menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
   return `<div class="remsteps"><b>On a computer:</b> click the install icon at the right of the address bar, or open the browser menu and pick <b>Install Pylon Daily</b> (Chrome and Edge). On a Mac in Safari: <b>File → Add to Dock</b>.</div>`;
 }
@@ -2700,7 +2768,7 @@ function installSteps(){
 function installHTML(btnId){
   if(isStandalone()) return `<p>✓ Pylon Daily is already on your home screen.</p>`;
   if(installEvt) return `<div class="remrow"><button id="${btnId}">📲 ADD TO HOME SCREEN</button></div>`;
-  if(isIOS()) return `<div class="remsteps">In Safari, tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.</div>`;
+  if(isIOS()) return `<div class="remsteps">${iosShareWhere()[0].toUpperCase()+iosShareWhere().slice(1)}, then <b>Add to Home Screen</b>. Then use <b>👤 Profile → Move your progress</b> to bring your streak along.</div>`;
   return `<div class="remsteps">Open your browser's menu (<b>⋮</b>) and pick <b>Add to Home screen</b> or <b>Install app</b>.</div>`;
 }
 /* one-time announcement: Pylon Daily works as an app from the home screen (no app store) */
@@ -2772,6 +2840,12 @@ function remIcs(){
     "RRULE:FREQ=DAILY","SUMMARY:🏈 Pylon Daily: today's drive is up","DESCRIPTION:Keep your streak going: https://pylondaily.com",
     "URL:https://pylondaily.com","BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Pylon Daily","TRIGGER:PT0M","END:VALARM",
     "END:VEVENT","END:VCALENDAR"].join("\r\n");
+  if(HOSTED){
+    // iPhones can't open a calendar file made inside the page, so ask the server for a real one
+    const url="/api/reminder?t="+encodeURIComponent(t)+"&d="+remStamp(t).slice(0,8);
+    if(isStandalone()) window.open(url,"_blank"); else location.href=url;
+    return;
+  }
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="pylon-daily-reminder.ics";
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
